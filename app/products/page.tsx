@@ -90,12 +90,12 @@ export default function ProductsPage() {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-7">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 xl:gap-7 items-stretch">
 
           {products.map((p) => (
             <div
               key={p.id}
-              className="group bg-[#111111] rounded-3xl overflow-hidden border border-[#222] hover:border-gray-700 transition"
+              className="group bg-[#111111] rounded-md overflow-hidden border border-[#222] hover:border-gray-700 transition flex flex-col"
             >
 
               {/* IMAGE */}
@@ -104,80 +104,78 @@ export default function ProductsPage() {
                 <img
                   src={p.images[0]}
                   alt={p.name}
-                  className="w-full h-[260px] object-cover group-hover:scale-105 transition duration-500"
+                  className="w-full h-[180px] sm:h-[210px] lg:h-[230px] object-cover group-hover:scale-105 transition duration-500"
                 />
 
                 {/* overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
 
                 {/* TOP BAR */}
-                <div className="absolute top-4 left-4 right-4 flex justify-between items-center">
+                <div className="absolute top-3 left-3 right-3 flex justify-between items-center">
 
                   {/* stock */}
                   <span
-                    className={`text-xs px-3 py-1 rounded-full font-medium backdrop-blur-md ${
-                      p.stock > 0
+                    className={`text-[10px] sm:text-xs px-2 sm:px-3 py-1 rounded-full font-medium backdrop-blur-md ${p.stock > 0
                         ? "bg-green-500/20 text-green-300 border border-green-500/30"
                         : "bg-red-500/20 text-red-300 border border-red-500/30"
-                    }`}
+                      }`}
                   >
                     {p.stock > 0 ? "Available" : "Out of Stock"}
                   </span>
 
-                  {/* favourite button */}
+                  {/* favourite */}
                   <button
                     onClick={() => toggleFavourite(p.id!)}
                     className={`
-                      w-10 h-10
-                      rounded-full
-                      backdrop-blur-md
-                      border border-white/10
-                      flex items-center justify-center
-                      transition-all duration-300
-                      ${p.isfavourite
+              w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10
+              rounded-full
+              backdrop-blur-md
+              border border-white/10
+              flex items-center justify-center
+              transition-all duration-300
+              ${p.isfavourite
                         ? "bg-red-500 text-white"
-                        : "bg-black/50 text-white hover:bg-red-500"
+                        : "bg-black/50 text-white"
                       }
-                    `}
+            `}
                   >
-                    <FaHeart className="text-sm" />
+                    <FaHeart className="text-[12px] sm:text-sm" />
                   </button>
 
                 </div>
               </div>
 
               {/* CONTENT */}
-              <div className="p-5">
+              <div className="p-4 sm:p-5 flex flex-col flex-1">
 
-                <p className="text-gray-500 text-xs uppercase tracking-[2px] mb-2">
+                {/* CATEGORY */}
+                <p className="text-gray-500 text-[10px] sm:text-xs uppercase tracking-[2px] mb-2">
                   {p.category}
                 </p>
 
-                <h2 className="text-white text-xl font-semibold mb-2 line-clamp-1">
+                {/* NAME */}
+                <h2 className="text-white text-sm sm:text-lg font-semibold mb-2 line-clamp-1">
                   {p.name}
                 </h2>
 
-                <p className="text-gray-400 text-sm line-clamp-2">
-                  {p.description}
-                </p>
-
-                <div className="flex items-end gap-3 mt-5">
-                  <span className="text-gray-500 line-through text-sm">
+                {/* PRICES */}
+                <div className="flex items-end gap-2 sm:gap-3 mt-auto">
+                  <span className="text-gray-500 line-through text-xs sm:text-sm">
                     Rs {p.original_price}
                   </span>
 
-                  <span className="text-white text-2xl font-bold">
+                  <span className="text-white text-lg sm:text-2xl font-bold">
                     Rs {p.discounted_price}
                   </span>
                 </div>
 
+                {/* BUTTON */}
                 <button
                   disabled={p.stock === 0}
-                  className={`w-full mt-5 py-3 rounded-2xl font-medium transition ${
-                    p.stock > 0
+                  className={`w-full mt-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl font-medium transition text-sm sm:text-base ${p.stock > 0
                       ? "bg-white text-black hover:bg-gray-200"
                       : "bg-[#1f1f1f] text-gray-600 cursor-not-allowed"
-                  }`}
+                    }`}
                 >
                   {p.stock > 0 ? "Add to Cart" : "Unavailable"}
                 </button>

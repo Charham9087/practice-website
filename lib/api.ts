@@ -26,3 +26,4 @@ export const uploadImage = async (file: File): Promise<string> => {
 
     return (imageURL)
 }
+

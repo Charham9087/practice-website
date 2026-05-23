@@ -9,3 +9,8 @@
     stock:  number;
     isfavourite : boolean;
 }
+
+export type cart = {
+    id? : number;
+    quantity: number;
+}
