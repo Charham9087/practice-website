@@ -116,8 +116,8 @@ export default function ProductsPage() {
                   {/* stock */}
                   <span
                     className={`text-[10px] sm:text-xs px-2 sm:px-3 py-1 rounded-full font-medium backdrop-blur-md ${p.stock > 0
-                        ? "bg-green-500/20 text-green-300 border border-green-500/30"
-                        : "bg-red-500/20 text-red-300 border border-red-500/30"
+                      ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                      : "bg-red-500/20 text-red-300 border border-red-500/30"
                       }`}
                   >
                     {p.stock > 0 ? "Available" : "Out of Stock"}
@@ -126,18 +126,13 @@ export default function ProductsPage() {
                   {/* favourite */}
                   <button
                     onClick={() => toggleFavourite(p.id!)}
-                    className={`
-              w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10
-              rounded-full
-              backdrop-blur-md
-              border border-white/10
-              flex items-center justify-center
-              transition-all duration-300
-              ${p.isfavourite
+                    className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95
+
+                    ${p.isfavourite
                         ? "bg-red-500 text-white"
-                        : "bg-black/50 text-white"
+                        : "bg-black/50 text-white hover:bg-white/10"
                       }
-            `}
+              `}
                   >
                     <FaHeart className="text-[12px] sm:text-sm" />
                   </button>
@@ -172,10 +167,12 @@ export default function ProductsPage() {
                 {/* BUTTON */}
                 <button
                   disabled={p.stock === 0}
-                  className={`w-full mt-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl font-medium transition text-sm sm:text-base ${p.stock > 0
-                      ? "bg-white text-black hover:bg-gray-200"
+                  className={`w-full mt-4 py-2.5 rounded-xl font-medium transition-all duration-300 text-sm sm:text-base
+                  ${p.stock > 0
+                      ? "bg-white text-black hover:bg-gray-200 hover:scale-[1.02]"
                       : "bg-[#1f1f1f] text-gray-600 cursor-not-allowed"
-                    }`}
+                    }
+              `}
                 >
                   {p.stock > 0 ? "Add to Cart" : "Unavailable"}
                 </button>

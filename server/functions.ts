@@ -19,7 +19,6 @@ export async function setFavourite(
   return data.isfavourite;
 }
 
-
 export async function getCategories() {
   const { data, error } = await supabase
     .from("products")
