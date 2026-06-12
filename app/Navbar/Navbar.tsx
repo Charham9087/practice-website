@@ -96,6 +96,9 @@ export default function Navbar() {
             <Link href="/contact" className="hover:text-gray-400 transition">
               Contact
             </Link>
+            <Link href="/admin" className="hover:text-gray-400 transition">
+              Admin
+            </Link>
 
             <Link href="/catalogue" className="hover:text-gray-400 transition">
               Catalogues

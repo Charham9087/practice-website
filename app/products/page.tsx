@@ -4,6 +4,8 @@ import { useState } from "react";
 import { getProducts } from "@/lib/api";
 import { Products } from "@/lib/types";
 import { FaHeart } from "react-icons/fa6";
+import { link } from "fs";
+import { useRouter} from "next/navigation";
 
 const initialProducts: Products[] = [
   {
@@ -16,6 +18,7 @@ const initialProducts: Products[] = [
     images: ["/images/product1.jpg"],
     stock: 10,
     isfavourite: false,
+    rating: 0
   },
   {
     id: 2,
@@ -27,6 +30,7 @@ const initialProducts: Products[] = [
     images: ["/images/product2.jpg"],
     stock: 5,
     isfavourite: false,
+    rating: 0
   },
   {
     id: 3,
@@ -38,6 +42,7 @@ const initialProducts: Products[] = [
     images: ["/images/product3.jpg"],
     stock: 0,
     isfavourite: true,
+    rating: 0
   },
   {
     id: 4,
@@ -49,6 +54,7 @@ const initialProducts: Products[] = [
     images: ["/images/product4.jpg"],
     stock: 2,
     isfavourite: false,
+    rating: 0
   },
   {
     id: 5,
@@ -60,11 +66,13 @@ const initialProducts: Products[] = [
     images: ["/images/product5.jpg"],
     stock: 1,
     isfavourite: false,
+    rating: 0
   },
 ];
 
 export default function ProductsPage() {
   const [products, setProducts] = useState(initialProducts);
+  const router = useRouter();
 
   // toggle favourite
   const toggleFavourite = (id: number) => {
@@ -93,8 +101,8 @@ export default function ProductsPage() {
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 xl:gap-7 items-stretch">
 
           {products.map((p) => (
-            <div
-              key={p.id}
+            <div onClick={() =>  router.push(`/viewproduct?id=${p.id}`)}
+              key={p.id}  
               className="group bg-[#111111] rounded-md overflow-hidden border border-[#222] hover:border-gray-700 transition flex flex-col"
             >
 

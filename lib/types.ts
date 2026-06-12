@@ -8,6 +8,7 @@
     images: string[];
     stock:  number;
     isfavourite : boolean;
+    rating: number;
 }
 
 export type cart = {
