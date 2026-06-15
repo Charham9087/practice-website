@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "./Navbar/Navbar";
-import Footer from "./footer/footer";
+import LayoutWrapper from "../components/layoutWrapper";
+import Providers from "../components/providers";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -23,16 +25,34 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Small inline script to set initial theme class before React hydrates to prevent
+  // hydration mismatches from next-themes updating document.documentElement.className
+  const setInitialTheme = `(() => {
+    try {
+      const theme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (theme === 'dark' || (!theme && prefersDark)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    } catch (e) {}
+  })()`;
+
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">
-        <Navbar />
-        {children}
-        <Footer />
-      </body>
-    </html>
-  );
-}
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <Script id="theme-init" strategy="beforeInteractive">
+          {setInitialTheme}
+        </Script>
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable} h-full antialiased min-h-screen w-screen overflow-x-hidden`}>
+         <Providers>
+           <LayoutWrapper>
+             {children}
+           </LayoutWrapper>
+         </Providers>
+       </body>
+     </html>
+   );
+ }

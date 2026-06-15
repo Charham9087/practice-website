@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 
 import {
   FaShoppingCart,
@@ -16,16 +17,15 @@ import {
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   return (
     <>
       {/* NAVBAR */}
       <nav className="sticky top-0 z-50 bg-black border-b border-gray-800 text-white">
         <div className="flex items-center justify-between px-4 md:px-6 py-4">
-
           {/* LEFT */}
           <div className="flex items-center gap-4">
-
             {/* Hamburger */}
             <button
               className="md:hidden text-2xl"
@@ -46,7 +46,6 @@ export default function Navbar() {
           {/* CENTER SEARCH BAR */}
           <div className="hidden md:flex items-center w-full max-w-xl mx-10">
             <div className="relative w-full">
-
               <input
                 type="text"
                 placeholder="Search products..."
@@ -84,7 +83,6 @@ export default function Navbar() {
 
           {/* RIGHT */}
           <div className="hidden md:flex items-center gap-6 text-sm font-medium">
-
             <Link href="/" className="hover:text-gray-400 transition">
               Home
             </Link>
@@ -96,7 +94,7 @@ export default function Navbar() {
             <Link href="/contact" className="hover:text-gray-400 transition">
               Contact
             </Link>
-            <Link href="/admin" className="hover:text-gray-400 transition">
+            <Link href="/admin/dashboard" className="hover:text-gray-400 transition">
               Admin
             </Link>
 
@@ -110,6 +108,13 @@ export default function Navbar() {
             >
               <FaShoppingCart />
             </Link>
+
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="px-3 py-2 rounded-md bg-white text-black"
+            >
+              {theme === 'dark' ? 'Light' : 'Dark'}
+            </button>
 
             <Link
               href="/login"
@@ -140,7 +145,6 @@ export default function Navbar() {
         {/* MOBILE SEARCH */}
         <div className="md:hidden px-4 pb-4">
           <div className="relative">
-
             <input
               type="text"
               placeholder="Search..."
@@ -192,7 +196,6 @@ export default function Navbar() {
       >
         {/* TOP */}
         <div className="flex items-center justify-between p-5 border-b border-gray-800">
-
           <h2 className="text-xl font-bold text-white">
             Menu
           </h2>
@@ -207,7 +210,6 @@ export default function Navbar() {
 
         {/* LINKS */}
         <div className="flex flex-col p-4 text-white">
-
           <Link
             href="/"
             onClick={() => setMenuOpen(false)}
