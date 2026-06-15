@@ -8,14 +8,14 @@ import Footer from "@/components/footer";
 
 export default function Layout({
   children,
+  serverDark,
 }: {
   children: React.ReactNode;
+  serverDark?: boolean;
 }) {
   const pathname = usePathname();
-
   const isAdminRoute = pathname.startsWith("/admin");
 
-  // ADMIN LAYOUT
   if (isAdminRoute) {
     return (
       <SidebarProvider>
@@ -31,10 +31,9 @@ export default function Layout({
     );
   }
 
-  // PUBLIC (NON-ADMIN) LAYOUT
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      <Navbar initialDark={serverDark} />
 
       <main className="flex-1">{children}</main>
 

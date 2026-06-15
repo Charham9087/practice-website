@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { FaFacebook, FaInstagram, FaTwitter } from "react-icons/fa6";
-import { getCategories } from "@/server/functions";
+// import { getCategories } from "@/server/functions"; // 👈 FUTURE USE ONLY
 
-export default async function Footer() {
-    const categories = await getCategories();
+export default  function Footer() {
+    // const categories = await getCategories(); // 👈 FUTURE USE ONLY
+    const categories: string[] = []; // temporary fallback
 
     return (
         <footer className="bg-black border-t border-[#222] text-gray-400">
@@ -27,13 +28,14 @@ export default async function Footer() {
                         <h3 className="text-white font-semibold mb-4">Quick Links</h3>
                         <ul className="space-y-2 text-sm">
                             <li><Link href="/">Home</Link></li>
-                            <li><Link href="/products">Products</Link></li>
-                            <li><Link href="/about">About</Link></li>
-                            <li><Link href="/contact">Contact</Link></li>
+                            <li><Link href="/Store/catalogue">Products</Link></li>
+                            <li><Link href="/Store/about">About</Link></li>
+                            <li><Link href="/Store/contact">Contact</Link></li>
                         </ul>
                     </div>
 
-                    {/* Categories (FROM DB) */}
+                    {/* Categories (FUTURE DB INTEGRATION) */}
+                    {/*
                     <div>
                         <h3 className="text-white font-semibold mb-4">Categories</h3>
 
@@ -47,7 +49,15 @@ export default async function Footer() {
                                     </li>
                                 ))
                             )}
-                            
+                        </ul>
+                    </div>
+                    */}
+
+                    {/* TEMP STATIC PLACEHOLDER (so layout doesn't break) */}
+                    <div>
+                        <h3 className="text-white font-semibold mb-4">Categories</h3>
+                        <ul className="space-y-2 text-sm">
+                            <li className="text-gray-500">Coming soon...</li>
                         </ul>
                     </div>
 

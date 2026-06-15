@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 
@@ -15,9 +15,32 @@ import {
   FaSearch,
 } from "react-icons/fa";
 
-export default function Navbar() {
+export default function Navbar({ initialDark }: { initialDark?: boolean }) {
+  // initialize using server-provided value so SSR output matches client initial render
+  const [isDark, setIsDark] = useState<boolean>(initialDark ?? false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    // sync DOM/class with initial value (in case layout script didn't run)
+    if (typeof document !== "undefined") {
+      if (isDark) document.documentElement.classList.add("dark");
+      else document.documentElement.classList.remove("dark");
+    }
+  }, []); // run once
+
+  function toggleTheme() {
+    const next = !isDark;
+    setIsDark(next);
+    if (typeof document !== "undefined") {
+      if (next) document.documentElement.classList.add("dark");
+      else document.documentElement.classList.remove("dark");
+      // persist to cookie so server can read next render
+      document.cookie = `theme=${next ? "dark" : "light"}; path=/; max-age=${60 * 60 * 24 * 365}`;
+    }
+  }
+
   const [menuOpen, setMenuOpen] = useState(false);
-  const { theme, setTheme } = useTheme();
 
   return (
     <>
@@ -87,37 +110,37 @@ export default function Navbar() {
               Home
             </Link>
 
-            <Link href="/about" className="hover:text-gray-400 transition">
+            <Link href="/Store/about" className="hover:text-gray-400 transition">
               About
             </Link>
 
-            <Link href="/contact" className="hover:text-gray-400 transition">
+            <Link href="/Store/contact" className="hover:text-gray-400 transition">
               Contact
             </Link>
             <Link href="/admin/dashboard" className="hover:text-gray-400 transition">
               Admin
             </Link>
 
-            <Link href="/catalogue" className="hover:text-gray-400 transition">
+            <Link href="/Store/catalogue" className="hover:text-gray-400 transition">
               Catalogues
             </Link>
 
             <Link
-              href="/cart"
+              href="/Store/cart"
               className="text-xl hover:text-gray-400 transition"
             >
               <FaShoppingCart />
             </Link>
 
             <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              onClick={toggleTheme}
               className="px-3 py-2 rounded-md bg-white text-black"
             >
-              {theme === 'dark' ? 'Light' : 'Dark'}
+              {isDark ? "Dark" : "Light"}
             </button>
 
             <Link
-              href="/login"
+              href="/Store/login"
               className="
                 rounded-xl
                 bg-white
@@ -135,7 +158,7 @@ export default function Navbar() {
 
           {/* MOBILE CART */}
           <Link
-            href="/cart"
+            href="/Store/cart"
             className="md:hidden text-xl"
           >
             <FaShoppingCart />
@@ -220,7 +243,7 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/about"
+            href="/Store/about"
             onClick={() => setMenuOpen(false)}
             className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-gray-900 transition"
           >
@@ -229,7 +252,7 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/contact"
+            href="/Store/contact"
             onClick={() => setMenuOpen(false)}
             className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-gray-900 transition"
           >
@@ -238,7 +261,7 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/catalogue"
+            href="/Store/catalogue"
             onClick={() => setMenuOpen(false)}
             className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-gray-900 transition"
           >
@@ -247,7 +270,7 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/cart"
+            href="/Store/cart"
             onClick={() => setMenuOpen(false)}
             className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-gray-900 transition"
           >
@@ -256,7 +279,7 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/login"
+            href="/Store/login"
             className="
               mt-5
               rounded-xl

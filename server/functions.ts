@@ -21,18 +21,13 @@ export async function setFavourite(
 
 export async function getCategories() {
   const { data, error } = await supabase
-    .from("products")
-    .select("category");
+    .from("categories")
+    .select("*");
 
   if (error) {
-    console.error("Error fetching categories:", error);
+    console.log(error);
     return [];
   }
 
-  // remove duplicates
-  const uniqueCategories = [
-    ...new Set(data.map((item) => item.category)),
-  ];
-
-  return uniqueCategories;
+  return data?.map((c) => c.name) || [];
 }
