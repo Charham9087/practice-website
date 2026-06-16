@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState , useEffect} from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {countUnreadNotifications} from "@/server/functions";
 
 import {
   Sidebar,
@@ -30,6 +31,14 @@ export default function AppSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isActive = (path: string) => pathname === path;
+
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    countUnreadNotifications().then((count) => {
+      setUnreadCount(count);
+    });
+  }, []);
 
   const NavItem = ({
     href,
@@ -120,7 +129,7 @@ export default function AppSidebar() {
               href="/admin/notifications"
               icon={Bell}
               label="Notifications"
-              badge={12}
+              badge={unreadCount>0 ? unreadCount : undefined}
             />
           </SidebarContent>
 

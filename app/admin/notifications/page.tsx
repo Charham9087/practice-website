@@ -1,78 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Mail, MailOpen, User, Star } from "lucide-react";
-
-const initialMessages = [
-  {
-    id: 1,
-    name: "Ali Hassan",
-    email: "ali@example.com",
-    subject: "Order not delivered",
-    message:
-      "I placed an order 5 days ago but I have not received it yet. Please check.",
-    read: false,
-    important: false,
-    date: "12 Aug 2026",
-  },
-  {
-    id: 2,
-    name: "Sara Khan",
-    email: "sara@example.com",
-    subject: "Product issue",
-    message:
-      "The product I received is damaged. I want a replacement.",
-    read: true,
-    important: true,
-    date: "11 Aug 2026",
-  },
-  {
-    id: 3,
-    name: "Ahmed Ali",
-    email: "ahmed@example.com",
-    subject: "Refund request",
-    message:
-      "I want to request a refund for my last order.",
-    read: false,
-    important: false,
-    date: "10 Aug 2026",
-  },
-];
+import {
+  getNotifications,
+  markAsRead,
+  importantMarking,
+} from "@/server/functions";
 
 export default function NotificationsPage() {
-  const [messages, setMessages] = useState(initialMessages);
+  const [messages, setMessages] = useState<any[]>([]);
   const [selected, setSelected] = useState<any>(null);
   const [tab, setTab] = useState("all");
 
-  const markAsRead = (id: number) => {
-    setMessages((prev) =>
-      prev.map((msg) =>
-        msg.id === id ? { ...msg, read: true } : msg
-      )
-    );
+  // 🔄 fetch data helper
+  const refreshData = async () => {
+    const data = await getNotifications(tab);
+    setMessages(data || []);
   };
 
-  const toggleImportant = (id: number) => {
-    setMessages((prev) =>
-      prev.map((msg) =>
-        msg.id === id
-          ? { ...msg, important: !msg.important }
-          : msg
-      )
-    );
-  };
-
-  const openMessage = (msg: any) => {
+  // 📩 open message + mark as read
+  const openMessage = async (msg: any) => {
     setSelected(msg);
-    markAsRead(msg.id);
+
+    await markAsRead(msg.id);
+
+    // update UI
+    refreshData();
   };
 
-  // FILTER LOGIC
-  const filteredMessages = messages.filter((msg) => {
-    if (tab === "important") return msg.important;
-    if (tab === "unread") return !msg.read;
-    return true;
-  });
+  // 🔁 load data on tab change
+  useEffect(() => {
+    refreshData();
+  }, [tab]);
 
   return (
     <div className="p-4 md:p-6 space-y-4">
@@ -115,7 +75,7 @@ export default function NotificationsPage() {
           </div>
 
           <div className="divide-y">
-            {filteredMessages.map((msg) => (
+            {messages.map((msg) => (
               <div
                 key={msg.id}
                 onClick={() => openMessage(msg)}
@@ -127,13 +87,13 @@ export default function NotificationsPage() {
               >
                 {/* ICONS */}
                 <div className="mt-1 flex flex-col items-center gap-1">
-                  {msg.read ? (
+                  {msg.isRead ? (
                     <MailOpen size={18} />
                   ) : (
                     <Mail size={18} />
                   )}
 
-                  {msg.important && (
+                  {msg.isImportant && (
                     <Star size={14} className="text-yellow-500" />
                   )}
                 </div>
@@ -141,11 +101,9 @@ export default function NotificationsPage() {
                 {/* CONTENT */}
                 <div className="flex-1">
                   <p className="font-medium">{msg.name}</p>
-                  <p className="text-sm text-gray-500">
-                    {msg.subject}
-                  </p>
+                  <p className="text-sm text-gray-500">{msg.subject}</p>
                   <p className="text-xs text-gray-400">
-                    {msg.date}
+                    {msg.createdAt}
                   </p>
                 </div>
               </div>
@@ -174,27 +132,36 @@ export default function NotificationsPage() {
 
                 {/* IMPORTANT BUTTON */}
                 <button
-                  onClick={() => toggleImportant(selected.id)}
+                  onClick={async () => {
+                    await importantMarking(selected.id);
+
+                    refreshData();
+
+                    setSelected((prev: any) => ({
+                      ...prev,
+                      isImportant: !prev.isImportant,
+                    }));
+                  }}
                   className="flex items-center gap-1 px-3 py-1 border rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800"
                 >
                   <Star
                     size={16}
                     className={
-                      selected.important
+                      selected.isImportant
                         ? "text-yellow-500"
                         : "text-gray-400"
                     }
                   />
-                  {selected.important ? "Important" : "Mark Important"}
+                  {selected.isImportant
+                    ? "Important"
+                    : "Mark Important"}
                 </button>
               </div>
 
               {/* SUBJECT */}
               <div>
                 <p className="text-sm text-gray-500">Subject</p>
-                <p className="font-semibold">
-                  {selected.subject}
-                </p>
+                <p className="font-semibold">{selected.subject}</p>
               </div>
 
               {/* MESSAGE */}

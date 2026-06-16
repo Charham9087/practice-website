@@ -49,9 +49,16 @@ export default async function RootLayout({
   return (
     <html lang="en" className={serverDark ? "dark" : undefined} suppressHydrationWarning>
       <head>
-        <Script id="theme-init" strategy="beforeInteractive">
-          {setInitialTheme}
-        </Script>
+     <Script id="theme-init" strategy="beforeInteractive">
+  {`
+    (function () {
+      const theme = localStorage.getItem("theme");
+      if (theme === "dark") {
+        document.documentElement.classList.add("dark");
+      }
+    })();
+  `}
+</Script>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} h-full antialiased min-h-screen w-screen overflow-x-hidden`}>
          <Providers>

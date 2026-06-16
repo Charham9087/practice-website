@@ -15,3 +15,13 @@ export type cart = {
     id? : number;
     quantity: number;
 }
+
+export type notification = {
+    id? : number;
+    Name: string;
+    Email: string;
+    message: string;
+    isRead: boolean;
+    createdAt: Date;
+    isImportant: boolean;
+}
