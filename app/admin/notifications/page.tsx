@@ -25,7 +25,6 @@ export default function NotificationsPage() {
 
     await markAsRead(msg.id);
 
-    // update UI
     refreshData();
   };
 
@@ -68,13 +67,15 @@ export default function NotificationsPage() {
       <div className="grid md:grid-cols-3 gap-4">
 
         {/* LEFT LIST */}
-        <div className="md:col-span-1 border rounded-xl overflow-hidden bg-white dark:bg-zinc-900">
-          
-          <div className="p-3 border-b font-semibold dark:border-zinc-800">
+        <div className="md:col-span-1 border rounded-xl bg-white dark:bg-zinc-900 flex flex-col max-h-[80vh] overflow-hidden">
+
+          {/* HEADER (sticky) */}
+          <div className="p-3 border-b font-semibold dark:border-zinc-800 bg-white dark:bg-zinc-900 sticky top-0 z-10">
             Inbox
           </div>
 
-          <div className="divide-y">
+          {/* SCROLLABLE LIST */}
+          <div className="divide-y overflow-y-auto">
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -103,7 +104,13 @@ export default function NotificationsPage() {
                   <p className="font-medium">{msg.name}</p>
                   <p className="text-sm text-gray-500">{msg.subject}</p>
                   <p className="text-xs text-gray-400">
-                    {msg.createdAt}
+                    {new Date(msg.created_at).toLocaleString("en-GB", {
+                      year: "numeric",
+                      month: "short",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </p>
                 </div>
               </div>
@@ -113,6 +120,7 @@ export default function NotificationsPage() {
 
         {/* RIGHT PANEL */}
         <div className="md:col-span-2 border rounded-xl p-4 bg-white dark:bg-zinc-900 min-h-[300px]">
+
           {selected ? (
             <div className="space-y-4">
 
@@ -121,12 +129,8 @@ export default function NotificationsPage() {
                 <div className="flex items-center gap-3">
                   <User />
                   <div>
-                    <p className="font-semibold">
-                      {selected.name}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {selected.email}
-                    </p>
+                    <p className="font-semibold">{selected.name}</p>
+                    <p className="text-sm text-gray-500">{selected.email}</p>
                   </div>
                 </div>
 
@@ -152,9 +156,7 @@ export default function NotificationsPage() {
                         : "text-gray-400"
                     }
                   />
-                  {selected.isImportant
-                    ? "Important"
-                    : "Mark Important"}
+                  {selected.isImportant ? "Important" : "Mark Important"}
                 </button>
               </div>
 
@@ -167,9 +169,7 @@ export default function NotificationsPage() {
               {/* MESSAGE */}
               <div>
                 <p className="text-sm text-gray-500">Message</p>
-                <p className="whitespace-pre-line">
-                  {selected.message}
-                </p>
+                <p className="whitespace-pre-line">{selected.message}</p>
               </div>
 
               {/* ACTIONS */}
@@ -189,6 +189,7 @@ export default function NotificationsPage() {
               Select a message to view details
             </div>
           )}
+
         </div>
       </div>
     </div>

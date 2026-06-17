@@ -18,10 +18,11 @@ export type cart = {
 
 export type notification = {
     id? : number;
-    Name: string;
-    Email: string;
+    name: string;
+    subject: string; 
+    email: string;
     message: string;
     isRead: boolean;
-    createdAt: Date;
     isImportant: boolean;
+    created_at: string;
 }

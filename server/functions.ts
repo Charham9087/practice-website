@@ -1,5 +1,6 @@
 "use server"
 import { supabase } from "@/lib/supabase";
+import { create } from "domain";
 import { html, mark } from "framer-motion/client";
 import nodemailer from "nodemailer";
 //to use 👇
@@ -66,80 +67,45 @@ export default async function sendEmails(Subject: string, Text: string) {
   } catch (error) {
     console.error("Error sending email:", error);
   }
-}
+}   
 
-export async function getNotifications(tab: string) {
+export async function getNotifications(tab: string): Promise<Notification[]> {
+  let query = supabase.from("Notification").select("*");
 
-  async function getAllNotifications() {
-    const { data, error } = await supabase
-      .from("notifications")
-      .select("*")
-      .order("createdAt", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching notifications:", error);
-      return [];
-    }
-
-    return data;
+  if (tab === "unread") {
+    query = query.eq("isRead", false);
   }
 
-  async function getUnreadNotifications() {
-    const { data, error } = await supabase
-      .from("notifications")
-      .select("*")
-      .eq("isRead", false)
-      .order("createdAt", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching unread notifications:", error);
-      return [];
-    }
-
-    return data;
+  if (tab === "important") {
+    query = query.eq("isImportant", true);
   }
 
-  async function getImportantNotifications() {
-    const { data, error } = await supabase
-      .from("notifications")
-      .select("*")
-      .eq("isImportant", true)
-      .order("createdAt", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching important notifications:", error);
-      return [];
-    }
-
-    return data;
-  }
-
-  switch (tab) {
-    case "important":
-      return await getImportantNotifications();
-
-    case "unread":
-      return await getUnreadNotifications();
-
-    default:
-      return await getAllNotifications();
-  }
-}
-
-export async function markAsRead(notificationId: number) {
-  const { data, error } = await supabase
-    .from("notifications")
-    .update({ isRead: true })
-    .eq("id", notificationId)
-    .select("*")
-    .single();
+  const { data, error } = await query.order("created_at", {
+    ascending: false,
+  });
 
   if (error) {
-    console.error("Error marking notification as read:", error);
-    return null;
+    console.error(error);
+    return [];
+  }
+  console.log("TAB:", tab);
+console.log("ERROR:", error);
+console.log("DATA:", data);
+  return data as Notification[];
+}
+
+
+export async function markAsRead(id: number) {
+  const { error } = await supabase
+    .from("Notification")
+    .update({ isRead: true })
+    .eq("id", id);
+
+  if (error) {
+    console.error(error);
   }
 
-  return data;
+  return !error;
 }
 export async function importantMarking(notificationId: number) {
   // Step 1: Get current value
@@ -175,7 +141,7 @@ export async function importantMarking(notificationId: number) {
 
 export async function countUnreadNotifications() {
   const { count , error } = await supabase
-  .from("Notifications")
+  .from("Notification")
   .select("*", {count : "exact", head: true})
   .eq("isRead", false);
 
@@ -186,3 +152,20 @@ export async function countUnreadNotifications() {
 
   return count ?? 0;
 }
+export async function getProducts(){
+  try {
+    const {data , error } = await supabase.from("products").select("*");
+    return data || [];
+
+  }catch (error) {
+    console.error("Error fetching products:", error);
+    return [];
+  }
+}
+
+// to create👎
+
+export async function delproduct(){}
+// -----------------
+
+

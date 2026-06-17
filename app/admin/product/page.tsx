@@ -2,6 +2,8 @@
 
 import { FaEdit, FaTrash, FaEye, FaPlus } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { getProducts } from "@/server/functions";
 const products = [
   {
     id: 1,
@@ -39,6 +41,14 @@ const products = [
 
 export default function ProductsAdminPage() {
   const router = useRouter();
+  const [products, setProducts] = useState<any[]>([]);
+
+
+  useEffect(() => {
+    getProducts().then((data) => {
+      setProducts(data);
+    });
+  }, []);
 
   return (
 
@@ -124,7 +134,7 @@ export default function ProductsAdminPage() {
                   </td>
 
                   <td className="px-6 py-4 text-white">
-                    Rs {product.price.toLocaleString()}
+                   Rs {product.discounted_price?.toLocaleString()}
                   </td>
 
                   <td className="px-6 py-4">
@@ -196,7 +206,7 @@ export default function ProductsAdminPage() {
                   </p>
 
                   <p className="text-white font-bold mt-2">
-                    Rs {product.price.toLocaleString()}
+                    Rs {product.discounted_price?.toLocaleString()}
                   </p>
 
                   <span
