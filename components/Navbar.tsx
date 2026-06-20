@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useTheme } from "next-themes";
 
 import {
   FaShoppingCart,
@@ -16,18 +15,15 @@ import {
 } from "react-icons/fa";
 
 export default function Navbar({ initialDark }: { initialDark?: boolean }) {
-  // initialize using server-provided value so SSR output matches client initial render
   const [isDark, setIsDark] = useState<boolean>(initialDark ?? false);
-  const [mounted, setMounted] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    // sync DOM/class with initial value (in case layout script didn't run)
     if (typeof document !== "undefined") {
       if (isDark) document.documentElement.classList.add("dark");
       else document.documentElement.classList.remove("dark");
     }
-  }, []); // run once
+  }, [isDark]);
 
   function toggleTheme() {
     const next = !isDark;
@@ -40,8 +36,6 @@ export default function Navbar({ initialDark }: { initialDark?: boolean }) {
     }
   }
 
-  const [menuOpen, setMenuOpen] = useState(false);
-
   return (
     <>
       {/* NAVBAR */}
@@ -53,6 +47,7 @@ export default function Navbar({ initialDark }: { initialDark?: boolean }) {
             <button
               className="md:hidden text-2xl"
               onClick={() => setMenuOpen(true)}
+              aria-label="Open menu"
             >
               <FaBars />
             </button>
@@ -62,7 +57,7 @@ export default function Navbar({ initialDark }: { initialDark?: boolean }) {
               href="/"
               className="text-2xl font-bold tracking-wide"
             >
-              Dummy website
+              MAQ MART
             </Link>
           </div>
 
@@ -86,10 +81,10 @@ export default function Navbar({ initialDark }: { initialDark?: boolean }) {
                   focus:border-gray-600
                 "
                 onKeyDown={(e) => {
-                     if (e.key === "Enter") {
-                     // handleSearch();
-                     }
-}}
+                  if (e.key === "Enter") {
+                    e.currentTarget.blur();
+                  }
+                }}
               />
 
               <FaSearch
@@ -121,8 +116,8 @@ export default function Navbar({ initialDark }: { initialDark?: boolean }) {
               Admin
             </Link>
 
-            <Link href="/Store/catalogue" className="hover:text-gray-400 transition">
-              Catalogues
+            <Link href="/Store/products" className="hover:text-gray-400 transition">
+              Products
             </Link>
 
             <Link
@@ -135,6 +130,7 @@ export default function Navbar({ initialDark }: { initialDark?: boolean }) {
             <button
               onClick={toggleTheme}
               className="px-3 py-2 rounded-md bg-white text-black"
+              aria-label="Toggle theme"
             >
               {isDark ? "Dark" : "Light"}
             </button>
@@ -160,6 +156,7 @@ export default function Navbar({ initialDark }: { initialDark?: boolean }) {
           <Link
             href="/Store/cart"
             className="md:hidden text-xl"
+            aria-label="Cart"
           >
             <FaShoppingCart />
           </Link>
@@ -226,6 +223,7 @@ export default function Navbar({ initialDark }: { initialDark?: boolean }) {
           <button
             className="text-2xl text-white"
             onClick={() => setMenuOpen(false)}
+            aria-label="Close menu"
           >
             <FaTimes />
           </button>
@@ -261,12 +259,12 @@ export default function Navbar({ initialDark }: { initialDark?: boolean }) {
           </Link>
 
           <Link
-            href="/Store/catalogue"
+            href="/Store/products"
             onClick={() => setMenuOpen(false)}
             className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-gray-900 transition"
           >
             <FaBook />
-            Catalogues
+            Products
           </Link>
 
           <Link

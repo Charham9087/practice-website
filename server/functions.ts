@@ -1,7 +1,6 @@
-"use server"
+"use server";
 import { supabase } from "@/lib/supabase";
-import { create } from "domain";
-import { html, mark } from "framer-motion/client";
+import { NotificationItem, Products } from "@/lib/types";
 import nodemailer from "nodemailer";
 //to use 👇
 export async function setFavourite(
@@ -69,7 +68,7 @@ export default async function sendEmails(Subject: string, Text: string) {
   }
 }   
 
-export async function getNotifications(tab: string): Promise<Notification[]> {
+export async function getNotifications(tab: string): Promise<NotificationItem[]> {
   let query = supabase.from("Notification").select("*");
 
   if (tab === "unread") {
@@ -88,10 +87,7 @@ export async function getNotifications(tab: string): Promise<Notification[]> {
     console.error(error);
     return [];
   }
-  console.log("TAB:", tab);
-console.log("ERROR:", error);
-console.log("DATA:", data);
-  return data as Notification[];
+  return data as NotificationItem[];
 }
 
 
@@ -155,7 +151,12 @@ export async function countUnreadNotifications() {
 export async function getProducts(){
   try {
     const {data , error } = await supabase.from("products").select("*");
-    return data || [];
+    if (error) {
+      console.error("Error fetching products:", error);
+      return [];
+    }
+
+    return (data || []) as Products[];
 
   }catch (error) {
     console.error("Error fetching products:", error);
@@ -169,3 +170,28 @@ export async function delproduct(){}
 // -----------------
 
 
+
+export const uploadImages = async (files: File[]) => {
+  const urls: string[] = [];
+
+  for (const file of files) {
+    const fileName = `${Date.now()}-${file.name}`;
+
+    const { data, error } = await supabase.storage
+      .from("products")
+      .upload(fileName, file);
+
+    if (error) {
+      console.error("Error uploading product image:", error);
+      continue;
+    }
+
+    const { data: publicUrl } = supabase.storage
+      .from("products")
+      .getPublicUrl(data.path);
+
+    urls.push(publicUrl.publicUrl);
+  }
+
+  return urls;
+};

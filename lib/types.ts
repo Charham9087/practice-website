@@ -16,7 +16,7 @@ export type cart = {
     quantity: number;
 }
 
-export type notification = {
+export type NotificationItem = {
     id? : number;
     name: string;
     subject: string; 

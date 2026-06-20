@@ -1,44 +1,108 @@
 "use client";
 
-import { useState } from "react";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { uploadImages } from "@/server/functions";
+
+type ProductForm = {
+  name: string;
+  category: string;
+  description: string;
+  original_price: string;
+  discounted_price: string;
+  stock: string;
+};
+
+const initialProduct: ProductForm = {
+  name: "",
+  category: "",
+  description: "",
+  original_price: "",
+  discounted_price: "",
+  stock: "",
+};
+
+const inputClass =
+  "w-full rounded-md border border-[#333] bg-black px-3 py-3 text-white outline-none transition focus:border-white";
 
 export default function AddProductPage() {
-  const [product, setProduct] = useState({
-    name: "",
-    category: "",
-    description: "",
-    original_price: "",
-    discounted_price: "",
-    stock: "",
-  });
+  const router = useRouter();
+  const [product, setProduct] = useState<ProductForm>(initialProduct);
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    return () => {
+      previews.forEach((preview) => URL.revokeObjectURL(preview));
+    };
+  }, [previews]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    setProduct({
-      ...product,
-      [e.target.name]: e.target.value,
-    });
+    setProduct((prev) => ({
+      ...prev,
+      [event.target.name]: event.target.value,
+    }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files) return;
 
-    console.log(product);
+    const selectedFiles = Array.from(event.target.files);
+    setFiles((prev) => [...prev, ...selectedFiles]);
+    setPreviews((prev) => [
+      ...prev,
+      ...selectedFiles.map((file) => URL.createObjectURL(file)),
+    ]);
+    event.target.value = "";
+  };
 
-    // API Call Here
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setErrorMessage("");
+    setIsSubmitting(true);
+
+    try {
+      const imageUrls = files.length ? await uploadImages(files) : [];
+      const { error } = await supabase.from("products").insert({
+        name: product.name.trim(),
+        category: product.category.trim(),
+        description: product.description.trim(),
+        original_price: Number(product.original_price),
+        discounted_price: Number(product.discounted_price),
+        stock: Number(product.stock),
+        images: imageUrls,
+        isfavourite: false,
+        rating: 0,
+      });
+
+      if (error) {
+        setErrorMessage(error.message);
+        return;
+      }
+
+      router.push("/admin/product");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Failed to add product."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <section className="min-h-screen bg-black p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto">
-
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-white">
             Add Product
           </h1>
-
           <p className="text-gray-400 mt-2">
             Create a new product for your store
           </p>
@@ -46,206 +110,110 @@ export default function AddProductPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="bg-[#111111] border border-[#222] rounded-xl p-5 sm:p-8"
+          className="bg-[#111] border border-[#222] rounded-md p-5 sm:p-8"
         >
+          <input
+            name="name"
+            value={product.name}
+            onChange={handleChange}
+            placeholder="Product Name"
+            className={inputClass}
+            required
+          />
 
-          {/* Product Name */}
-          <div className="mb-5">
-            <label className="block text-white mb-2">
-              Product Name
-            </label>
+          <input
+            name="category"
+            value={product.category}
+            onChange={handleChange}
+            placeholder="Category"
+            className={`${inputClass} mt-4`}
+            required
+          />
 
+          <textarea
+            name="description"
+            value={product.description}
+            onChange={handleChange}
+            placeholder="Description"
+            rows={5}
+            className={`${inputClass} mt-4 resize-none`}
+            required
+          />
+
+          <div className="grid md:grid-cols-2 gap-4 mt-4">
             <input
-              type="text"
-              name="name"
-              value={product.name}
+              type="number"
+              min="0"
+              name="original_price"
+              value={product.original_price}
               onChange={handleChange}
-              placeholder="Premium Headphones"
-              className="
-                w-full
-                bg-black
-                border border-[#333]
-                rounded-xl
-                px-4
-                py-3
-                text-white
-                outline-none
-                focus:border-white
-              "
+              placeholder="Original Price"
+              className={inputClass}
+              required
             />
-          </div>
-
-          {/* Category */}
-          <div className="mb-5">
-            <label className="block text-white mb-2">
-              Category
-            </label>
-
-            <input
-              type="text"
-              name="category"
-              value={product.category}
-              onChange={handleChange}
-              placeholder="Electronics"
-              className="
-                w-full
-                bg-black
-                border border-[#333]
-                rounded-xl
-                px-4
-                py-3
-                text-white
-                outline-none
-                focus:border-white
-              "
-            />
-          </div>
-
-          {/* Description */}
-          <div className="mb-5">
-            <label className="block text-white mb-2">
-              Description
-            </label>
-
-            <textarea
-              name="description"
-              value={product.description}
-              onChange={handleChange}
-              rows={5}
-              placeholder="Product description..."
-              className="
-                w-full
-                bg-black
-                border border-[#333]
-                rounded-xl
-                px-4
-                py-3
-                text-white
-                outline-none
-                focus:border-white
-                resize-none
-              "
-            />
-          </div>
-
-          {/* Prices */}
-          <div className="grid md:grid-cols-2 gap-5 mb-5">
-
-            <div>
-              <label className="block text-white mb-2">
-                Original Price
-              </label>
-
-              <input
-                type="number"
-                name="original_price"
-                value={product.original_price}
-                onChange={handleChange}
-                placeholder="25000"
-                className="
-                  w-full
-                  bg-black
-                  border border-[#333]
-                  rounded-xl
-                  px-4
-                  py-3
-                  text-white
-                  outline-none
-                  focus:border-white
-                "
-              />
-            </div>
-
-            <div>
-              <label className="block text-white mb-2">
-                Discounted Price
-              </label>
-
-              <input
-                type="number"
-                name="discounted_price"
-                value={product.discounted_price}
-                onChange={handleChange}
-                placeholder="19999"
-                className="
-                  w-full
-                  bg-black
-                  border border-[#333]
-                  rounded-xl
-                  px-4
-                  py-3
-                  text-white
-                  outline-none
-                  focus:border-white
-                "
-              />
-            </div>
-
-          </div>
-
-          {/* Stock */}
-          <div className="mb-5">
-            <label className="block text-white mb-2">
-              Stock Quantity
-            </label>
 
             <input
               type="number"
-              name="stock"
-              value={product.stock}
+              min="0"
+              name="discounted_price"
+              value={product.discounted_price}
               onChange={handleChange}
-              placeholder="10"
-              className="
-                w-full
-                bg-black
-                border border-[#333]
-                rounded-xl
-                px-4
-                py-3
-                text-white
-                outline-none
-                focus:border-white
-              "
+              placeholder="Discounted Price"
+              className={inputClass}
+              required
             />
           </div>
 
-          {/* Image Upload */}
-          <div className="mb-8">
-            <label className="block text-white mb-2">
-              Product Images
-            </label>
+          <input
+            type="number"
+            min="0"
+            name="stock"
+            value={product.stock}
+            onChange={handleChange}
+            placeholder="Stock"
+            className={`${inputClass} mt-4`}
+            required
+          />
 
+          <div className="mt-6">
             <input
               type="file"
               multiple
-              className="
-                w-full
-                text-gray-400
-                border border-dashed border-[#333]
-                rounded-xl
-                p-4
-                bg-black
-              "
+              accept="image/*"
+              onChange={handleImageChange}
+              className="w-full text-gray-400 border border-dashed border-[#333] rounded-md p-4 bg-black"
             />
           </div>
 
-          {/* Submit */}
+          {previews.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
+              {previews.map((src, index) => (
+                <Image
+                  key={src}
+                  src={src}
+                  alt={`Product preview ${index + 1}`}
+                  width={240}
+                  height={160}
+                  unoptimized
+                  className="w-full h-24 object-cover rounded-md border border-[#333]"
+                />
+              ))}
+            </div>
+          )}
+
+          {errorMessage && (
+            <p className="mt-4 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+              {errorMessage}
+            </p>
+          )}
+
           <button
             type="submit"
-            className="
-              w-full
-              py-3
-              rounded-xl
-              bg-white
-              text-black
-              font-semibold
-              hover:bg-gray-200
-              transition
-            "
+            disabled={isSubmitting}
+            className="w-full mt-6 py-3 bg-white text-black font-bold rounded-md transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Add Product
+            {isSubmitting ? "Adding Product..." : "Add Product"}
           </button>
-
         </form>
       </div>
     </section>

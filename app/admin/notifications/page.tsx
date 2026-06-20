@@ -1,110 +1,111 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Mail, MailOpen, User, Star } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Mail, MailOpen, Star, User } from "lucide-react";
+import { NotificationItem } from "@/lib/types";
 import {
   getNotifications,
-  markAsRead,
   importantMarking,
+  markAsRead,
 } from "@/server/functions";
 
-export default function NotificationsPage() {
-  const [messages, setMessages] = useState<any[]>([]);
-  const [selected, setSelected] = useState<any>(null);
-  const [tab, setTab] = useState("all");
+type NotificationTab = "all" | "important" | "unread";
 
-  // 🔄 fetch data helper
-  const refreshData = async () => {
-    const data = await getNotifications(tab);
+const tabs: NotificationTab[] = ["all", "important", "unread"];
+
+export default function NotificationsPage() {
+  const [messages, setMessages] = useState<NotificationItem[]>([]);
+  const [selected, setSelected] = useState<NotificationItem | null>(null);
+  const [tab, setTab] = useState<NotificationTab>("all");
+
+  const refreshData = async (currentTab = tab) => {
+    const data = await getNotifications(currentTab);
     setMessages(data || []);
   };
 
-  // 📩 open message + mark as read
-  const openMessage = async (msg: any) => {
-    setSelected(msg);
+  const openMessage = async (message: NotificationItem) => {
+    setSelected(message);
 
-    await markAsRead(msg.id);
-
-    refreshData();
+    if (message.id) {
+      await markAsRead(message.id);
+      await refreshData();
+    }
   };
 
-  // 🔁 load data on tab change
   useEffect(() => {
-    refreshData();
+    let cancelled = false;
+
+    getNotifications(tab).then((data) => {
+      if (!cancelled) {
+        setMessages(data || []);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [tab]);
 
   return (
     <div className="p-4 md:p-6 space-y-4">
-
-      {/* HEADER */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold">
-          Customer Queries
-        </h1>
-        <p className="text-gray-500">
-          Messages from contact form
-        </p>
+        <h1 className="text-2xl md:text-3xl font-bold">Customer Queries</h1>
+        <p className="text-gray-500">Messages from contact form</p>
       </div>
 
-      {/* TABS */}
       <div className="flex gap-2 flex-wrap">
-        {["all", "important", "unread"].map((t) => (
+        {tabs.map((item) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-lg border transition ${
-              tab === t
+            key={item}
+            onClick={() => setTab(item)}
+            className={`px-4 py-2 rounded-md border transition ${
+              tab === item
                 ? "bg-blue-600 text-white"
                 : "hover:bg-gray-100 dark:hover:bg-zinc-800"
             }`}
           >
-            {t.toUpperCase()}
+            {item.toUpperCase()}
           </button>
         ))}
       </div>
 
-      {/* LAYOUT */}
       <div className="grid md:grid-cols-3 gap-4">
-
-        {/* LEFT LIST */}
-        <div className="md:col-span-1 border rounded-xl bg-white dark:bg-zinc-900 flex flex-col max-h-[80vh] overflow-hidden">
-
-          {/* HEADER (sticky) */}
+        <div className="md:col-span-1 border rounded-md bg-white dark:bg-zinc-900 flex flex-col max-h-[80vh] overflow-hidden">
           <div className="p-3 border-b font-semibold dark:border-zinc-800 bg-white dark:bg-zinc-900 sticky top-0 z-10">
             Inbox
           </div>
 
-          {/* SCROLLABLE LIST */}
           <div className="divide-y overflow-y-auto">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                onClick={() => openMessage(msg)}
-                className={`p-3 cursor-pointer flex gap-3 hover:bg-gray-100 dark:hover:bg-zinc-800 transition ${
-                  selected?.id === msg.id
+            {messages.length === 0 && (
+              <div className="p-4 text-sm text-gray-500">No messages found.</div>
+            )}
+
+            {messages.map((message) => (
+              <button
+                type="button"
+                key={message.id}
+                onClick={() => openMessage(message)}
+                className={`w-full p-3 text-left flex gap-3 hover:bg-gray-100 dark:hover:bg-zinc-800 transition ${
+                  selected?.id === message.id
                     ? "bg-blue-50 dark:bg-zinc-800"
                     : ""
                 }`}
               >
-                {/* ICONS */}
                 <div className="mt-1 flex flex-col items-center gap-1">
-                  {msg.isRead ? (
-                    <MailOpen size={18} />
-                  ) : (
-                    <Mail size={18} />
-                  )}
+                  {message.isRead ? <MailOpen size={18} /> : <Mail size={18} />}
 
-                  {msg.isImportant && (
+                  {message.isImportant && (
                     <Star size={14} className="text-yellow-500" />
                   )}
                 </div>
 
-                {/* CONTENT */}
-                <div className="flex-1">
-                  <p className="font-medium">{msg.name}</p>
-                  <p className="text-sm text-gray-500">{msg.subject}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium truncate">{message.name}</p>
+                  <p className="text-sm text-gray-500 truncate">
+                    {message.subject}
+                  </p>
                   <p className="text-xs text-gray-400">
-                    {new Date(msg.created_at).toLocaleString("en-GB", {
+                    {new Date(message.created_at).toLocaleString("en-GB", {
                       year: "numeric",
                       month: "short",
                       day: "2-digit",
@@ -113,40 +114,39 @@ export default function NotificationsPage() {
                     })}
                   </p>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
 
-        {/* RIGHT PANEL */}
-        <div className="md:col-span-2 border rounded-xl p-4 bg-white dark:bg-zinc-900 min-h-[300px]">
-
+        <div className="md:col-span-2 border rounded-md p-4 bg-white dark:bg-zinc-900 min-h-[300px]">
           {selected ? (
             <div className="space-y-4">
-
-              {/* USER */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
                   <User />
-                  <div>
-                    <p className="font-semibold">{selected.name}</p>
-                    <p className="text-sm text-gray-500">{selected.email}</p>
+                  <div className="min-w-0">
+                    <p className="font-semibold truncate">{selected.name}</p>
+                    <p className="text-sm text-gray-500 truncate">
+                      {selected.email}
+                    </p>
                   </div>
                 </div>
 
-                {/* IMPORTANT BUTTON */}
                 <button
                   onClick={async () => {
+                    if (!selected.id) return;
+
                     await importantMarking(selected.id);
+                    await refreshData();
 
-                    refreshData();
-
-                    setSelected((prev: any) => ({
-                      ...prev,
-                      isImportant: !prev.isImportant,
-                    }));
+                    setSelected((prev) =>
+                      prev
+                        ? { ...prev, isImportant: !prev.isImportant }
+                        : prev
+                    );
                   }}
-                  className="flex items-center gap-1 px-3 py-1 border rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800"
+                  className="flex shrink-0 items-center gap-1 px-3 py-1 border rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800"
                 >
                   <Star
                     size={16}
@@ -160,36 +160,31 @@ export default function NotificationsPage() {
                 </button>
               </div>
 
-              {/* SUBJECT */}
               <div>
                 <p className="text-sm text-gray-500">Subject</p>
                 <p className="font-semibold">{selected.subject}</p>
               </div>
 
-              {/* MESSAGE */}
               <div>
                 <p className="text-sm text-gray-500">Message</p>
                 <p className="whitespace-pre-line">{selected.message}</p>
               </div>
 
-              {/* ACTIONS */}
               <div className="flex gap-3 pt-4">
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                   Reply
                 </button>
 
-                <button className="px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800">
+                <button className="px-4 py-2 border rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800">
                   Archive
                 </button>
               </div>
-
             </div>
           ) : (
             <div className="flex items-center justify-center h-full text-gray-500">
               Select a message to view details
             </div>
           )}
-
         </div>
       </div>
     </div>

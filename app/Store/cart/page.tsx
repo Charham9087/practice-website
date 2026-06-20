@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { FaTrash } from "react-icons/fa";
 
 const cartItems = [
@@ -7,7 +8,7 @@ const cartItems = [
     id: 1,
     name: "Premium Headphones",
     category: "Electronics",
-    image: "https://picsum.photos/300/300?random=1",
+    image: "https://dummyimage.com/300x300/111827/ffffff&text=Headphones",
     price: 19999,
     quantity: 1,
   },
@@ -15,7 +16,7 @@ const cartItems = [
     id: 2,
     name: "Smart Watch",
     category: "Wearables",
-    image: "https://picsum.photos/300/300?random=2",
+    image: "https://dummyimage.com/300x300/1f2937/ffffff&text=Watch",
     price: 14999,
     quantity: 2,
   },
@@ -23,7 +24,7 @@ const cartItems = [
     id: 3,
     name: "Gaming Mouse",
     category: "Accessories",
-    image: "https://picsum.photos/300/300?random=3",
+    image: "https://dummyimage.com/300x300/374151/ffffff&text=Mouse",
     price: 4999,
     quantity: 1,
   },
@@ -71,9 +72,11 @@ export default function CartPage() {
                 <div className="flex p-3 sm:p-4 gap-4">
                   {/* Image */}
                   <div className="w-[110px] sm:w-[140px] shrink-0">
-                    <img
+                    <Image
                       src={item.image}
                       alt={item.name}
+                      width={300}
+                      height={300}
                       className="
                         w-full
                         h-[110px]

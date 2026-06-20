@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { FaHeart, FaShoppingCart, FaStar } from "react-icons/fa";
 import { useState } from "react";
 
@@ -15,11 +16,21 @@ const product = {
     category: "Electronics",
     isfavourite: false,
     images: [
-        "/images/product1.jpg",
-        "/images/product2.jpg",
-        "/images/product3.jpg",
+        "https://dummyimage.com/800x800/111827/ffffff&text=Headphones",
+        "https://dummyimage.com/800x800/1f2937/ffffff&text=Audio",
+        "https://dummyimage.com/800x800/374151/ffffff&text=Wireless",
     ],
 };
+
+const fallbackImage = "https://dummyimage.com/800x800/111827/ffffff&text=Product";
+
+function getProductImage(src?: string) {
+    if (!src) return fallbackImage;
+    if (src.startsWith("http://") || src.startsWith("https://")) return src;
+    if (src.startsWith("/")) return src;
+
+    return fallbackImage;
+}
 
 export default function ProductViewPage() {
     const [quantity, setquantity] = useState(1);
@@ -37,7 +48,7 @@ export default function ProductViewPage() {
 
                     <span>/</span>
 
-                    <Link href="/products" className="hover:text-white transition">
+                    <Link href="/Store/products" className="hover:text-white transition">
                         Products
                     </Link>
 
@@ -53,24 +64,28 @@ export default function ProductViewPage() {
                     <div>
 
                         {/* MAIN IMAGE */}
-                        <div className="bg-[#111111] border border-[#222] rounded-2xl roup-hover:scale-105 transition duration-500 overflow-hidden">
-                            <img
-                                src={product.images[0]}
+                        <div className="bg-[#111111] border border-[#222] rounded-2xl transition duration-500 overflow-hidden">
+                            <Image
+                                src={getProductImage(product.images[0])}
                                 alt={product.name}
+                                width={800}
+                                height={800}
                                 className="w-full h-[320px] sm:h-[450px] object-cover"
                             />
                         </div>
 
                         {/* IMAGE GALLERY */}
-                        <div className="grid grid-cols-3 gap-4 mt-4 roup-hover:scale-105 transition duration-500">
+                        <div className="grid grid-cols-3 gap-4 mt-4 transition duration-500">
                             {product.images.map((img, index) => (
                                 <div
                                     key={index}
                                     className="bg-[#111111] border border-[#222] rounded-xl overflow-hidden cursor-pointer hover:border-gray-700 transition"
                                 >
-                                    <img
-                                        src={img}
-                                        alt="Product"
+                                    <Image
+                                        src={getProductImage(img)}
+                                        alt={`${product.name} image ${index + 1}`}
+                                        width={240}
+                                        height={160}
                                         className="w-full h-28 object-cover"
                                     />
                                 </div>

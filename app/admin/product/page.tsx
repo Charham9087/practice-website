@@ -1,52 +1,33 @@
 "use client";
 
+import Image from "next/image";
 import { FaEdit, FaTrash, FaEye, FaPlus } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getProducts } from "@/server/functions";
-const products = [
-  {
-    id: 1,
-    name: "Premium Headphones",
-    category: "Electronics",
-    price: 19999,
-    stock: 12,
-    image: "https://picsum.photos/300/300?random=1",
-  },
-  {
-    id: 2,
-    name: "Smart Watch",
-    category: "Wearables",
-    price: 14999,
-    stock: 8,
-    image: "https://picsum.photos/300/300?random=2",
-  },
-  {
-    id: 3,
-    name: "Gaming Mouse",
-    category: "Accessories",
-    price: 4999,
-    stock: 0,
-    image: "https://picsum.photos/300/300?random=3",
-  },
-  {
-    id: 4,
-    name: "Mechanical Keyboard",
-    category: "Accessories",
-    price: 8999,
-    stock: 5,
-    image: "https://picsum.photos/300/300?random=4",
-  },
-];
+import { Products } from "@/lib/types";
+
+const fallbackImage = "https://dummyimage.com/300x300/111827/ffffff&text=Product";
+
+function getProductImage(product: Products) {
+  const src = product.images?.[0];
+
+  if (!src) return fallbackImage;
+  if (src.startsWith("http://") || src.startsWith("https://")) return src;
+  if (src.startsWith("/")) return src;
+
+  return fallbackImage;
+}
 
 export default function ProductsAdminPage() {
   const router = useRouter();
-  const [products, setProducts] = useState<any[]>([]);
-
+  const [products, setProducts] = useState<Products[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     getProducts().then((data) => {
       setProducts(data);
+      setIsLoading(false);
     });
   }, []);
 
@@ -110,16 +91,34 @@ export default function ProductsAdminPage() {
             </thead>
 
             <tbody>
-              {products.map((product) => (
+              {isLoading && (
+                <tr>
+                  <td className="px-6 py-8 text-center text-gray-400" colSpan={5}>
+                    Loading products...
+                  </td>
+                </tr>
+              )}
+
+              {!isLoading && products.length === 0 && (
+                <tr>
+                  <td className="px-6 py-8 text-center text-gray-400" colSpan={5}>
+                    No products found.
+                  </td>
+                </tr>
+              )}
+
+              {!isLoading && products.map((product) => (
                 <tr
                   key={product.id}
                   className="border-b border-[#1a1a1a] hover:bg-[#181818]"
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
-                      <img
-                        src={product.image}
+                      <Image
+                        src={getProductImage(product)}
                         alt={product.name}
+                        width={56}
+                        height={56}
                         className="w-14 h-14 rounded-md object-cover"
                       />
 
@@ -176,7 +175,19 @@ export default function ProductsAdminPage() {
 
         {/* Mobile Cards */}
         <div className="lg:hidden space-y-4">
-          {products.map((product) => (
+          {isLoading && (
+            <div className="rounded-md border border-[#222] bg-[#111111] p-6 text-center text-gray-400">
+              Loading products...
+            </div>
+          )}
+
+          {!isLoading && products.length === 0 && (
+            <div className="rounded-md border border-[#222] bg-[#111111] p-6 text-center text-gray-400">
+              No products found.
+            </div>
+          )}
+
+          {!isLoading && products.map((product) => (
             <div
               key={product.id}
               className="
@@ -189,9 +200,11 @@ export default function ProductsAdminPage() {
             >
               <div className="flex gap-4">
 
-                <img
-                  src={product.image}
+                <Image
+                  src={getProductImage(product)}
                   alt={product.name}
+                  width={96}
+                  height={96}
                   className="w-24 h-24 rounded-md object-cover"
                 />
 

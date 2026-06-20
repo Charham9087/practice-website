@@ -12,18 +12,20 @@ export const getProducts = async () : Promise<Products[]> => {
 
 
 export const uploadImage = async (file: File): Promise<string> => {
-    const imageURL:string =""
-
     const fileName = `${Date.now()}-${file.name}`;
+    const { data, error } = await supabase.storage
+        .from('maq_mart-ts/products')
+        .upload(fileName, file);
 
+    if (error) {
+        console.error('Error uploading image:', error);
+        return "";
+    }
 
-    const{data,error} = await supabase.storage.from('maq_mart-ts/products').upload(fileName ,file)
+    const { data: publicUrl } = supabase.storage
+        .from('maq_mart-ts/products')
+        .getPublicUrl(data.path);
 
-
-
-
-
-
-    return (imageURL)
+    return publicUrl.publicUrl;
 }
 

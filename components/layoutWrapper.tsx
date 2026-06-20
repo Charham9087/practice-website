@@ -22,7 +22,7 @@ export default function Layout({
         <div className="flex min-h-screen w-full">
           <AppSidebar />
 
-          <main className="flex-1 p-4">
+          <main className="min-w-0 flex-1 p-4">
             <SidebarTrigger />
             {children}
           </main>

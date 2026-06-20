@@ -1,6 +1,8 @@
 "use client";
 
-import { useState , useEffect} from "react";
+import { useState, useEffect } from "react";
+import type { ComponentType } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {countUnreadNotifications} from "@/server/functions";
@@ -18,11 +20,50 @@ import {
   Package,
   Users,
   Settings,
-  BarChart3,
   Bell,
   Menu,
   X,
 } from "lucide-react";
+
+type NavItemProps = {
+  href: string;
+  icon: ComponentType<{ size?: number }>;
+  label: string;
+  badge?: number;
+  active: boolean;
+  collapsed: boolean;
+};
+
+function NavItem({
+  href,
+  icon: Icon,
+  label,
+  badge,
+  active,
+  collapsed,
+}: NavItemProps) {
+  return (
+    <Link
+      href={href}
+      className={`flex items-center justify-between gap-3 p-2 rounded-md transition ${
+        active
+          ? "bg-blue-600 text-white"
+          : "hover:bg-gray-100 dark:hover:bg-zinc-800"
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <Icon size={18} />
+        {!collapsed && <span>{label}</span>}
+      </div>
+
+      {!collapsed && badge && (
+        <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full">
+          {badge}
+        </span>
+      )}
+    </Link>
+  );
+}
 
 export default function AppSidebar() {
   const pathname = usePathname();
@@ -39,34 +80,6 @@ export default function AppSidebar() {
       setUnreadCount(count);
     });
   }, []);
-
-  const NavItem = ({
-    href,
-    icon: Icon,
-    label,
-    badge,
-  }: any) => (
-    <Link
-      href={href}
-      className={`flex items-center justify-between gap-3 p-2 rounded-md transition
-        ${
-          isActive(href)
-            ? "bg-blue-600 text-white"
-            : "hover:bg-gray-100 dark:hover:bg-zinc-800"
-        }`}
-    >
-      <div className="flex items-center gap-3">
-        <Icon size={18} />
-        {!collapsed && <span>{label}</span>}
-      </div>
-
-      {!collapsed && badge && (
-        <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full">
-          {badge}
-        </span>
-      )}
-    </Link>
-  );
 
   return (
     <>
@@ -106,21 +119,37 @@ export default function AppSidebar() {
 
           {/* CONTENT */}
           <SidebarContent className="p-2 flex-1 space-y-1">
-            <NavItem href="/admin/dashboard" icon={Home} label="Dashboard" />
+            <NavItem
+              href="/admin/dashboard"
+              icon={Home}
+              label="Dashboard"
+              active={isActive("/admin/dashboard")}
+              collapsed={collapsed}
+            />
 
-            <NavItem href="/admin/product" icon={Package} label="Products" />
+            <NavItem
+              href="/admin/product"
+              icon={Package}
+              label="Products"
+              active={isActive("/admin/product")}
+              collapsed={collapsed}
+            />
 
             <NavItem
               href="/admin/order"
               icon={ShoppingCart}
               label="Orders"
               badge={5}
+              active={isActive("/admin/order")}
+              collapsed={collapsed}
             />
 
             <NavItem
               href="/admin/Broadcast"
               icon={Users}
               label="Broadcast"
+              active={isActive("/admin/Broadcast")}
+              collapsed={collapsed}
             />
 
             
@@ -130,6 +159,8 @@ export default function AppSidebar() {
               icon={Bell}
               label="Notifications"
               badge={unreadCount>0 ? unreadCount : undefined}
+              active={isActive("/admin/notifications")}
+              collapsed={collapsed}
             />
           </SidebarContent>
 
@@ -139,13 +170,18 @@ export default function AppSidebar() {
               href="/admin/settings"
               icon={Settings}
               label="Settings"
+              active={isActive("/admin/settings")}
+              collapsed={collapsed}
             />
 
             {/* ADMIN PROFILE */}
             {!collapsed && (
               <div className="flex items-center gap-3 mt-3 p-2 rounded-md bg-gray-50 dark:bg-zinc-800">
-                <img
+                <Image
                   src="https://i.pravatar.cc/40"
+                  alt="Admin user"
+                  width={40}
+                  height={40}
                   className="w-10 h-10 rounded-full"
                 />
                 <div>

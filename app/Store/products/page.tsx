@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { getProducts } from "@/lib/api";
+import Image from "next/image";
 import { Products } from "@/lib/types";
 import { FaHeart } from "react-icons/fa6";
-import { link } from "fs";
-import { useRouter} from "next/navigation";
+import { useRouter } from "next/navigation";
 
 const initialProducts: Products[] = [
   {
@@ -15,7 +14,7 @@ const initialProducts: Products[] = [
     original_price: 100,
     discounted_price: 80,
     category: "Category 1",
-    images: ["/images/product1.jpg"],
+    images: ["https://dummyimage.com/600x600/111827/ffffff&text=Headphones"],
     stock: 10,
     isfavourite: false,
     rating: 0
@@ -27,7 +26,7 @@ const initialProducts: Products[] = [
     original_price: 200,
     discounted_price: 150,
     category: "Category 2",
-    images: ["/images/product2.jpg"],
+    images: ["https://dummyimage.com/600x600/1f2937/ffffff&text=Smart+Watch"],
     stock: 5,
     isfavourite: false,
     rating: 0
@@ -39,7 +38,7 @@ const initialProducts: Products[] = [
     original_price: 300,
     discounted_price: 250,
     category: "Category 3",
-    images: ["/images/product3.jpg"],
+    images: ["https://dummyimage.com/600x600/374151/ffffff&text=Gaming+Mouse"],
     stock: 0,
     isfavourite: true,
     rating: 0
@@ -51,7 +50,7 @@ const initialProducts: Products[] = [
     original_price: 400,
     discounted_price: 350,
     category: "Category 4",
-    images: ["/images/product4.jpg"],
+    images: ["https://dummyimage.com/600x600/4b5563/ffffff&text=Keyboard"],
     stock: 2,
     isfavourite: false,
     rating: 0
@@ -63,12 +62,24 @@ const initialProducts: Products[] = [
     original_price: 500,
     discounted_price: 450,
     category: "Category 5",
-    images: ["/images/product5.jpg"],
+    images: ["https://dummyimage.com/600x600/0f172a/ffffff&text=Accessories"],
     stock: 1,
     isfavourite: false,
     rating: 0
   },
 ];
+
+const fallbackImage = "https://dummyimage.com/600x600/111827/ffffff&text=Product";
+
+function getProductImage(product: Products) {
+  const src = product.images?.[0];
+
+  if (!src) return fallbackImage;
+  if (src.startsWith("http://") || src.startsWith("https://")) return src;
+  if (src.startsWith("/")) return src;
+
+  return fallbackImage;
+}
 
 export default function ProductsPage() {
   const [products, setProducts] = useState(initialProducts);
@@ -101,17 +112,20 @@ export default function ProductsPage() {
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 xl:gap-7 items-stretch">
 
           {products.map((p) => (
-            <div onClick={() =>  router.push(`/viewproduct?id=${p.id}`)}
+            <div
+              onClick={() => router.push(`/Store/viewproduct?id=${p.id}`)}
               key={p.id}  
-              className="group bg-[#111111] rounded-md overflow-hidden border border-[#222] hover:border-gray-700 transition flex flex-col"
+              className="group bg-[#111111] rounded-md overflow-hidden border border-[#222] hover:border-gray-700 transition flex flex-col cursor-pointer"
             >
 
               {/* IMAGE */}
               <div className="relative overflow-hidden">
 
-                <img
-                  src={p.images[0]}
+                <Image
+                  src={getProductImage(p)}
                   alt={p.name}
+                  width={600}
+                  height={600}
                   className="w-full h-[180px] sm:h-[210px] lg:h-[230px] object-cover group-hover:scale-105 transition duration-500"
                 />
 
@@ -133,7 +147,10 @@ export default function ProductsPage() {
 
                   {/* favourite */}
                   <button
-                    onClick={() => toggleFavourite(p.id!)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      if (p.id) toggleFavourite(p.id);
+                    }}
                     className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95
 
                     ${p.isfavourite
