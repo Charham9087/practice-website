@@ -1,97 +1,91 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Products } from "@/lib/types";
 import { FaHeart } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
-
-const initialProducts: Products[] = [
-  {
-    id: 1,
-    name: "Product 1",
-    description: "Description for Product 1",
-    original_price: 100,
-    discounted_price: 80,
-    category: "Category 1",
-    images: ["https://dummyimage.com/600x600/111827/ffffff&text=Headphones"],
-    stock: 10,
-    isfavourite: false,
-    rating: 0
-  },
-  {
-    id: 2,
-    name: "Product 2",
-    description: "Description for Product 2",
-    original_price: 200,
-    discounted_price: 150,
-    category: "Category 2",
-    images: ["https://dummyimage.com/600x600/1f2937/ffffff&text=Smart+Watch"],
-    stock: 5,
-    isfavourite: false,
-    rating: 0
-  },
-  {
-    id: 3,
-    name: "Product 3",
-    description: "Description for Product 3",
-    original_price: 300,
-    discounted_price: 250,
-    category: "Category 3",
-    images: ["https://dummyimage.com/600x600/374151/ffffff&text=Gaming+Mouse"],
-    stock: 0,
-    isfavourite: true,
-    rating: 0
-  },
-  {
-    id: 4,
-    name: "Product 4",
-    description: "Description for Product 4",
-    original_price: 400,
-    discounted_price: 350,
-    category: "Category 4",
-    images: ["https://dummyimage.com/600x600/4b5563/ffffff&text=Keyboard"],
-    stock: 2,
-    isfavourite: false,
-    rating: 0
-  },
-  {
-    id: 5,
-    name: "Product 5",
-    description: "Description for Product 5",
-    original_price: 500,
-    discounted_price: 450,
-    category: "Category 5",
-    images: ["https://dummyimage.com/600x600/0f172a/ffffff&text=Accessories"],
-    stock: 1,
-    isfavourite: false,
-    rating: 0
-  },
-];
-
-const fallbackImage = "https://dummyimage.com/600x600/111827/ffffff&text=Product";
-
-function getProductImage(product: Products) {
-  const src = product.images?.[0];
-
-  if (!src) return fallbackImage;
-  if (src.startsWith("http://") || src.startsWith("https://")) return src;
-  if (src.startsWith("/")) return src;
-
-  return fallbackImage;
-}
+import { getProductImage } from "@/lib/catalog";
+import { Products } from "@/lib/types";
+import {
+  addProductToCart,
+  getProductsWithFavourites,
+  searchProductIds,
+  toggleProductFavourite,
+} from "@/lib/shop";
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState<Products[]>([]);
+  const [visibleProducts, setVisibleProducts] = useState<Products[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [actionProductId, setActionProductId] = useState<number | null>(null);
+  const [message, setMessage] = useState("");
+  const [query, setQuery] = useState("");
   const router = useRouter();
 
-  // toggle favourite
-  const toggleFavourite = (id: number) => {
+  useEffect(() => {
+    getProductsWithFavourites().then((data) => {
+      setProducts(data);
+      setVisibleProducts(data);
+      setIsLoading(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const timer = window.setTimeout(async () => {
+      const trimmedQuery = query.trim();
+
+      if (!trimmedQuery) {
+        setVisibleProducts(products);
+        return;
+      }
+
+      const ids = await searchProductIds(trimmedQuery);
+      if (!isMounted) return;
+
+      if (ids.length === 0) {
+        setVisibleProducts([]);
+        return;
+      }
+
+      const orderedProducts = ids
+        .map((id) => products.find((product) => product.id === id))
+        .filter((product): product is Products => Boolean(product));
+      setVisibleProducts(orderedProducts);
+    }, 250);
+
+    return () => {
+      isMounted = false;
+      window.clearTimeout(timer);
+    };
+  }, [products, query]);
+
+  const toggleFavourite = async (id: number) => {
+    setMessage("");
+    setActionProductId(id);
+    const result = await toggleProductFavourite(id);
+
+    if (!result.success) {
+      setMessage(result.message);
+      setActionProductId(null);
+      return;
+    }
+
     setProducts((prev) =>
       prev.map((p) =>
-        p.id === id ? { ...p, isfavourite: !p.isfavourite } : p
+        p.id === id ? { ...p, isfavourite: Boolean(result.isFavourite) } : p
       )
     );
+    setMessage(result.message);
+    setActionProductId(null);
+  };
+
+  const addToCart = async (productId: number) => {
+    setMessage("");
+    setActionProductId(productId);
+    const result = await addProductToCart(productId, 1);
+    setMessage(result.message);
+    setActionProductId(null);
   };
 
   return (
@@ -108,10 +102,37 @@ export default function ProductsPage() {
           </p>
         </div>
 
+        <div className="mb-6">
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search by product, category, or description"
+            className="w-full rounded-md border border-[#333] bg-[#111] px-4 py-3 text-white outline-none transition focus:border-white"
+          />
+        </div>
+
+        {message && (
+          <p className="mb-5 rounded-md border border-[#333] bg-[#111] px-4 py-3 text-sm text-gray-300">
+            {message}
+          </p>
+        )}
+
         {/* Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 xl:gap-7 items-stretch">
+          {isLoading && (
+            <div className="col-span-full rounded-md border border-[#222] bg-[#111] p-6 text-center text-gray-400">
+              Loading products...
+            </div>
+          )}
 
-          {products.map((p) => (
+          {!isLoading && visibleProducts.length === 0 && (
+            <div className="col-span-full rounded-md border border-[#222] bg-[#111] p-6 text-center text-gray-400">
+              No products found.
+            </div>
+          )}
+
+          {!isLoading && visibleProducts.map((p) => (
             <div
               onClick={() => router.push(`/Store/viewproduct?id=${p.id}`)}
               key={p.id}  
@@ -126,6 +147,7 @@ export default function ProductsPage() {
                   alt={p.name}
                   width={600}
                   height={600}
+                  unoptimized
                   className="w-full h-[180px] sm:h-[210px] lg:h-[230px] object-cover group-hover:scale-105 transition duration-500"
                 />
 
@@ -151,6 +173,7 @@ export default function ProductsPage() {
                       event.stopPropagation();
                       if (p.id) toggleFavourite(p.id);
                     }}
+                    disabled={actionProductId === p.id}
                     className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95
 
                     ${p.isfavourite
@@ -181,17 +204,21 @@ export default function ProductsPage() {
                 {/* PRICES */}
                 <div className="flex items-end gap-2 sm:gap-3 mt-auto">
                   <span className="text-gray-500 line-through text-xs sm:text-sm">
-                    Rs {p.original_price}
+                    Rs {p.original_price.toLocaleString()}
                   </span>
 
                   <span className="text-white text-lg sm:text-2xl font-bold">
-                    Rs {p.discounted_price}
+                    Rs {p.discounted_price.toLocaleString()}
                   </span>
                 </div>
 
                 {/* BUTTON */}
                 <button
-                  disabled={p.stock === 0}
+                  disabled={p.stock === 0 || actionProductId === p.id}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    if (p.id) addToCart(p.id);
+                  }}
                   className={`w-full mt-4 py-2.5 rounded-xl font-medium transition-all duration-300 text-sm sm:text-base
                   ${p.stock > 0
                       ? "bg-white text-black hover:bg-gray-200 hover:scale-[1.02]"
@@ -199,7 +226,11 @@ export default function ProductsPage() {
                     }
               `}
                 >
-                  {p.stock > 0 ? "Add to Cart" : "Unavailable"}
+                  {actionProductId === p.id
+                    ? "Working..."
+                    : p.stock > 0
+                      ? "Add to Cart"
+                      : "Unavailable"}
                 </button>
 
               </div>

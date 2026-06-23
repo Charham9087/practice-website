@@ -34,7 +34,9 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4">Categories</h3>
             <ul className="space-y-2 text-sm">
-              <li className="text-gray-500">Coming soon...</li>
+              <li>Electronics</li>
+              <li>Wearables</li>
+              <li>Accessories</li>
             </ul>
           </div>
 

@@ -47,10 +47,10 @@ export default function NotificationsPage() {
   }, [tab]);
 
   return (
-    <div className="p-4 md:p-6 space-y-4">
+    <div className="min-h-screen space-y-4 bg-black p-4 text-white md:p-6">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold">Customer Queries</h1>
-        <p className="text-gray-500">Messages from contact form</p>
+        <p className="text-gray-400">Messages from contact form</p>
       </div>
 
       <div className="flex gap-2 flex-wrap">
@@ -60,8 +60,8 @@ export default function NotificationsPage() {
             onClick={() => setTab(item)}
             className={`px-4 py-2 rounded-md border transition ${
               tab === item
-                ? "bg-blue-600 text-white"
-                : "hover:bg-gray-100 dark:hover:bg-zinc-800"
+                ? "bg-white text-black"
+                : "border-[#333] text-gray-300 hover:bg-[#181818]"
             }`}
           >
             {item.toUpperCase()}
@@ -70,14 +70,14 @@ export default function NotificationsPage() {
       </div>
 
       <div className="grid md:grid-cols-3 gap-4">
-        <div className="md:col-span-1 border rounded-md bg-white dark:bg-zinc-900 flex flex-col max-h-[80vh] overflow-hidden">
-          <div className="p-3 border-b font-semibold dark:border-zinc-800 bg-white dark:bg-zinc-900 sticky top-0 z-10">
+        <div className="md:col-span-1 border border-[#222] rounded-md bg-[#111] flex flex-col max-h-[80vh] overflow-hidden">
+          <div className="p-3 border-b border-[#222] font-semibold bg-[#111] sticky top-0 z-10">
             Inbox
           </div>
 
           <div className="divide-y overflow-y-auto">
             {messages.length === 0 && (
-              <div className="p-4 text-sm text-gray-500">No messages found.</div>
+                <div className="p-4 text-sm text-gray-500">No messages found.</div>
             )}
 
             {messages.map((message) => (
@@ -85,9 +85,9 @@ export default function NotificationsPage() {
                 type="button"
                 key={message.id}
                 onClick={() => openMessage(message)}
-                className={`w-full p-3 text-left flex gap-3 hover:bg-gray-100 dark:hover:bg-zinc-800 transition ${
+                className={`w-full p-3 text-left flex gap-3 hover:bg-[#181818] transition ${
                   selected?.id === message.id
-                    ? "bg-blue-50 dark:bg-zinc-800"
+                    ? "bg-[#181818]"
                     : ""
                 }`}
               >
@@ -119,7 +119,7 @@ export default function NotificationsPage() {
           </div>
         </div>
 
-        <div className="md:col-span-2 border rounded-md p-4 bg-white dark:bg-zinc-900 min-h-[300px]">
+        <div className="md:col-span-2 border border-[#222] rounded-md p-4 bg-[#111] min-h-[300px]">
           {selected ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-4">
@@ -146,7 +146,7 @@ export default function NotificationsPage() {
                         : prev
                     );
                   }}
-                  className="flex shrink-0 items-center gap-1 px-3 py-1 border rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800"
+                  className="flex shrink-0 items-center gap-1 px-3 py-1 border border-[#333] rounded-md hover:bg-[#181818]"
                 >
                   <Star
                     size={16}
@@ -171,11 +171,11 @@ export default function NotificationsPage() {
               </div>
 
               <div className="flex gap-3 pt-4">
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                <button className="px-4 py-2 bg-white text-black rounded-md hover:bg-gray-200">
                   Reply
                 </button>
 
-                <button className="px-4 py-2 border rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800">
+                <button className="px-4 py-2 border border-[#333] rounded-md hover:bg-[#181818]">
                   Archive
                 </button>
               </div>

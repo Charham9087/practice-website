@@ -2,6 +2,8 @@
 import { supabase } from "@/lib/supabase";
 import { NotificationItem, Products } from "@/lib/types";
 import nodemailer from "nodemailer";
+
+type ProductPayload = Omit<Products, "id">;
 //to use 👇
 export async function setFavourite(
   productId: number,
@@ -150,7 +152,11 @@ export async function countUnreadNotifications() {
 }
 export async function getProducts(){
   try {
-    const {data , error } = await supabase.from("products").select("*");
+    const {data , error } = await supabase
+      .from("products")
+      .select("*")
+      .order("id", { ascending: false });
+
     if (error) {
       console.error("Error fetching products:", error);
       return [];
@@ -164,10 +170,58 @@ export async function getProducts(){
   }
 }
 
-// to create👎
+export async function getProductById(productId: number) {
+  if (!Number.isFinite(productId)) return null;
 
-export async function delproduct(){}
-// -----------------
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", productId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching product:", error);
+    return null;
+  }
+
+  return data as Products;
+}
+
+export async function updateProduct(productId: number, product: ProductPayload) {
+  if (!Number.isFinite(productId)) {
+    return { success: false, message: "Invalid product id." };
+  }
+
+  const { error } = await supabase
+    .from("products")
+    .update(product)
+    .eq("id", productId);
+
+  if (error) {
+    console.error("Error updating product:", error);
+    return { success: false, message: error.message };
+  }
+
+  return { success: true, message: "Product updated." };
+}
+
+export async function deleteProduct(productId: number) {
+  if (!Number.isFinite(productId)) {
+    return { success: false, message: "Invalid product id." };
+  }
+
+  const { error } = await supabase
+    .from("products")
+    .delete()
+    .eq("id", productId);
+
+  if (error) {
+    console.error("Error deleting product:", error);
+    return { success: false, message: error.message };
+  }
+
+  return { success: true, message: "Product deleted." };
+}
 
 
 
@@ -175,10 +229,11 @@ export const uploadImages = async (files: File[]) => {
   const urls: string[] = [];
 
   for (const file of files) {
-    const fileName = `${Date.now()}-${file.name}`;
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+    const fileName = `products/${Date.now()}-${crypto.randomUUID()}-${safeName}`;
 
     const { data, error } = await supabase.storage
-      .from("products")
+      .from("maq_mart-ts")
       .upload(fileName, file);
 
     if (error) {
@@ -187,7 +242,7 @@ export const uploadImages = async (files: File[]) => {
     }
 
     const { data: publicUrl } = supabase.storage
-      .from("products")
+      .from("maq_mart-ts")
       .getPublicUrl(data.path);
 
     urls.push(publicUrl.publicUrl);

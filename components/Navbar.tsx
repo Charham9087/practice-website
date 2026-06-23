@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
+import { signOutCustomer } from "@/lib/shop";
 
 import {
   FaShoppingCart,
@@ -11,12 +13,12 @@ import {
   FaInfoCircle,
   FaEnvelope,
   FaBook,
-  FaSearch,
 } from "react-icons/fa";
 
 export default function Navbar({ initialDark }: { initialDark?: boolean }) {
   const [isDark, setIsDark] = useState<boolean>(initialDark ?? false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [sessionEmail, setSessionEmail] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof document !== "undefined") {
@@ -24,6 +26,20 @@ export default function Navbar({ initialDark }: { initialDark?: boolean }) {
       else document.documentElement.classList.remove("dark");
     }
   }, [isDark]);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setSessionEmail(data.user?.email ?? null);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSessionEmail(session?.user.email ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   function toggleTheme() {
     const next = !isDark;
@@ -34,6 +50,11 @@ export default function Navbar({ initialDark }: { initialDark?: boolean }) {
       // persist to cookie so server can read next render
       document.cookie = `theme=${next ? "dark" : "light"}; path=/; max-age=${60 * 60 * 24 * 365}`;
     }
+  }
+
+  async function handleSignOut() {
+    await signOutCustomer();
+    setSessionEmail(null);
   }
 
   return (
@@ -61,43 +82,7 @@ export default function Navbar({ initialDark }: { initialDark?: boolean }) {
             </Link>
           </div>
 
-          {/* CENTER SEARCH BAR */}
-          <div className="hidden md:flex items-center w-full max-w-xl mx-10">
-            <div className="relative w-full">
-              <input
-                type="text"
-                placeholder="Search products..."
-                className="
-                  w-full
-                  rounded-2xl
-                  bg-[#111]
-                  border
-                  border-gray-800
-                  px-5
-                  py-3
-                  pr-12
-                  text-sm
-                  outline-none
-                  focus:border-gray-600
-                "
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.currentTarget.blur();
-                  }
-                }}
-              />
-
-              <FaSearch
-                className="
-                  absolute
-                  right-4
-                  top-1/2
-                  -translate-y-1/2
-                  text-gray-500
-                "
-              />
-            </div>
-          </div>
+    
 
           {/* RIGHT */}
           <div className="hidden md:flex items-center gap-6 text-sm font-medium">
@@ -135,21 +120,21 @@ export default function Navbar({ initialDark }: { initialDark?: boolean }) {
               {isDark ? "Dark" : "Light"}
             </button>
 
-            <Link
-              href="/Store/login"
-              className="
-                rounded-xl
-                bg-white
-                text-black
-                px-4
-                py-2
-                font-medium
-                hover:bg-gray-200
-                transition
-              "
-            >
-              Login
-            </Link>
+            {sessionEmail ? (
+              <button
+                onClick={handleSignOut}
+                className="rounded-md bg-white px-4 py-2 font-medium text-black transition hover:bg-gray-200"
+              >
+                Logout
+              </button>
+            ) : (
+              <Link
+                href="/Store/login"
+                className="rounded-md bg-white px-4 py-2 font-medium text-black transition hover:bg-gray-200"
+              >
+                Login
+              </Link>
+            )}
           </div>
 
           {/* MOBILE CART */}
@@ -162,37 +147,7 @@ export default function Navbar({ initialDark }: { initialDark?: boolean }) {
           </Link>
         </div>
 
-        {/* MOBILE SEARCH */}
-        <div className="md:hidden px-4 pb-4">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search..."
-              className="
-                w-full
-                rounded-xl
-                bg-[#111]
-                border
-                border-gray-800
-                px-4
-                py-3
-                pr-10
-                text-sm
-                outline-none
-              "
-            />
-
-            <FaSearch
-              className="
-                absolute
-                right-4
-                top-1/2
-                -translate-y-1/2
-                text-gray-500
-              "
-            />
-          </div>
-        </div>
+  
       </nav>
 
       {/* OVERLAY */}
@@ -276,20 +231,21 @@ export default function Navbar({ initialDark }: { initialDark?: boolean }) {
             Cart
           </Link>
 
-          <Link
-            href="/Store/login"
-            className="
-              mt-5
-              rounded-xl
-              bg-white
-              text-center
-              text-black
-              py-3
-              font-medium
-            "
-          >
-            Login
-          </Link>
+          {sessionEmail ? (
+            <button
+              onClick={handleSignOut}
+              className="mt-5 rounded-md bg-white py-3 text-center font-medium text-black"
+            >
+              Logout
+            </button>
+          ) : (
+            <Link
+              href="/Store/login"
+              className="mt-5 rounded-md bg-white py-3 text-center font-medium text-black"
+            >
+              Login
+            </Link>
+          )}
         </div>
       </div>
     </>

@@ -2,39 +2,119 @@
 import Link from "next/link";
 import Image from "next/image";
 import { FaHeart, FaShoppingCart, FaStar } from "react-icons/fa";
-import { useState } from "react";
-
-const product = {
-    id: 1,
-    name: "Premium Headphones",
-    description:
-        "Experience immersive sound quality with premium wireless headphones designed for comfort and performance.",
-    original_price: 25000,
-    discounted_price: 19999,
-    stock: 12,
-    rating: 4,
-    category: "Electronics",
-    isfavourite: false,
-    images: [
-        "https://dummyimage.com/800x800/111827/ffffff&text=Headphones",
-        "https://dummyimage.com/800x800/1f2937/ffffff&text=Audio",
-        "https://dummyimage.com/800x800/374151/ffffff&text=Wireless",
-    ],
-};
-
-const fallbackImage = "https://dummyimage.com/800x800/111827/ffffff&text=Product";
-
-function getProductImage(src?: string) {
-    if (!src) return fallbackImage;
-    if (src.startsWith("http://") || src.startsWith("https://")) return src;
-    if (src.startsWith("/")) return src;
-
-    return fallbackImage;
-}
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getImageSource } from "@/lib/catalog";
+import { Products } from "@/lib/types";
+import {
+    addProductToCart,
+    getProductWithFavourite,
+    toggleProductFavourite,
+} from "@/lib/shop";
 
 export default function ProductViewPage() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const productId = Number(searchParams.get("id"));
+    const [product, setProduct] = useState<Products | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const [quantity, setquantity] = useState(1);
-    const [isfavourite, setisfavourite] = useState(product.isfavourite);
+    const [activeImage, setActiveImage] = useState("");
+    const [message, setMessage] = useState("");
+    const [isActionLoading, setIsActionLoading] = useState(false);
+    const displayedImage = activeImage || product?.images?.[0];
+
+    useEffect(() => {
+        let isMounted = true;
+
+        async function loadProduct() {
+            setIsLoading(true);
+            const data = await getProductWithFavourite(productId);
+
+            if (!isMounted) return;
+
+            setProduct(data);
+            setActiveImage(data?.images?.[0] ?? "");
+            setquantity(1);
+            setIsLoading(false);
+        }
+
+        loadProduct();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [productId]);
+
+    const toggleFavourite = async () => {
+        if (!product?.id) return;
+
+        setMessage("");
+        setIsActionLoading(true);
+        const result = await toggleProductFavourite(product.id);
+
+        if (!result.success) {
+            setMessage(result.message);
+            setIsActionLoading(false);
+            return;
+        }
+
+        setProduct((current) =>
+            current ? { ...current, isfavourite: Boolean(result.isFavourite) } : current
+        );
+        setMessage(result.message);
+        setIsActionLoading(false);
+    };
+
+    const handleAddToCart = async () => {
+        if (!product?.id) return;
+        setMessage("");
+        setIsActionLoading(true);
+        const result = await addProductToCart(product.id, quantity);
+        setMessage(result.message);
+        setIsActionLoading(false);
+    };
+
+    const handleBuyNow = async () => {
+        if (!product?.id) return;
+        setMessage("");
+        setIsActionLoading(true);
+        const result = await addProductToCart(product.id, quantity);
+
+        if (!result.success) {
+            setMessage(result.message);
+            setIsActionLoading(false);
+            return;
+        }
+
+        router.push("/Store/cart");
+    };
+
+    if (isLoading) {
+        return (
+            <section className="min-h-screen bg-black px-4 py-10 text-white sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl rounded-md border border-[#222] bg-[#111] p-6 text-center text-gray-400">
+                    Loading product...
+                </div>
+            </section>
+        );
+    }
+
+    if (!product) {
+        return (
+            <section className="min-h-screen bg-black px-4 py-10 text-white sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl rounded-md border border-[#222] bg-[#111] p-6 text-center">
+                    <p className="text-gray-300">Product not found.</p>
+                    <Link
+                        href="/Store/products"
+                        className="mt-4 inline-flex rounded-md bg-white px-5 py-3 font-semibold text-black transition hover:bg-gray-200"
+                    >
+                        Back to Products
+                    </Link>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section className="bg-black text-white min-h-screen px-4 sm:px-6 lg:px-8 py-10">
@@ -66,26 +146,29 @@ export default function ProductViewPage() {
                         {/* MAIN IMAGE */}
                         <div className="bg-[#111111] border border-[#222] rounded-2xl transition duration-500 overflow-hidden">
                             <Image
-                                src={getProductImage(product.images[0])}
+                                src={getImageSource(displayedImage)}
                                 alt={product.name}
                                 width={800}
                                 height={800}
+                                unoptimized
                                 className="w-full h-[320px] sm:h-[450px] object-cover"
                             />
                         </div>
 
                         {/* IMAGE GALLERY */}
                         <div className="grid grid-cols-3 gap-4 mt-4 transition duration-500">
-                            {product.images.map((img, index) => (
+                            {(product.images ?? []).map((img, index) => (
                                 <div
                                     key={index}
+                                    onClick={() => setActiveImage(img)}
                                     className="bg-[#111111] border border-[#222] rounded-xl overflow-hidden cursor-pointer hover:border-gray-700 transition"
                                 >
                                     <Image
-                                        src={getProductImage(img)}
+                                        src={getImageSource(img)}
                                         alt={`${product.name} image ${index + 1}`}
                                         width={240}
                                         height={160}
+                                        unoptimized
                                         className="w-full h-28 object-cover"
                                     />
                                 </div>
@@ -125,11 +208,11 @@ export default function ProductViewPage() {
                         {/* PRICE */}
                         <div className="flex items-end gap-4 mb-8">
                             <span className="text-gray-500 line-through text-lg">
-                                Rs {product.original_price}
+                                Rs {product.original_price.toLocaleString()}
                             </span>
 
                             <span className="text-4xl font-bold text-white">
-                                Rs {product.discounted_price}
+                                Rs {product.discounted_price.toLocaleString()}
                             </span>
                         </div>
 
@@ -146,6 +229,12 @@ export default function ProductViewPage() {
                                     : "Out of Stock"}
                             </span>
                         </div>
+
+                        {message && (
+                            <p className="mb-5 rounded-md border border-[#333] bg-[#111] px-4 py-3 text-sm text-gray-300">
+                                {message}
+                            </p>
+                        )}
 
 
                         {/* ACTION BUTTONS */}
@@ -164,7 +253,7 @@ export default function ProductViewPage() {
                                 <span className="min-w-[20px] text-center">{quantity}</span>
 
                                 <button
-                                    onClick={() => setquantity((prev) => prev + 1)}
+                                    onClick={() => setquantity((prev) => Math.min(product.stock || 1, prev + 1))}
                                     className="text-xl px-2 hover:text-gray-400"
                                 >
                                     +
@@ -173,6 +262,7 @@ export default function ProductViewPage() {
 
                             {/* Add to Cart */}
                             <button
+                                onClick={handleAddToCart}
                                 className={`
       flex-1
       py-4
@@ -186,15 +276,24 @@ export default function ProductViewPage() {
                                         : "bg-[#1f1f1f] text-gray-600 cursor-not-allowed"
                                     }
     `}
-                                disabled={product.stock === 0}
+                                disabled={product.stock === 0 || isActionLoading}
                             >
                                 <FaShoppingCart />
-                                Add To Cart
+                                {isActionLoading ? "Working..." : "Add To Cart"}
+                            </button>
+
+                            <button
+                                onClick={handleBuyNow}
+                                disabled={product.stock === 0 || isActionLoading}
+                                className="flex-1 rounded-md border border-[#333] py-4 font-semibold text-white transition hover:bg-[#1a1a1a] disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                Buy Now
                             </button>
 
                             {/* Favourite */}
                             <button
-                                onClick={() => setisfavourite(!isfavourite)}
+                                onClick={toggleFavourite}
+                                disabled={isActionLoading}
                                 className={`
       w-14 h-14
       rounded-md
@@ -202,7 +301,7 @@ export default function ProductViewPage() {
       flex items-center justify-center
       transition-all duration-300
 
-      ${isfavourite
+      ${product.isfavourite
                                         ? "bg-red-500 text-white"
                                         : "bg-[#111111] hover:bg-[#1a1a1a]"
                                     }

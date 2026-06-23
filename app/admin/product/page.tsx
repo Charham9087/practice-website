@@ -4,7 +4,7 @@ import Image from "next/image";
 import { FaEdit, FaTrash, FaEye, FaPlus } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getProducts } from "@/server/functions";
+import { deleteProduct, getProducts } from "@/server/functions";
 import { Products } from "@/lib/types";
 
 const fallbackImage = "https://dummyimage.com/300x300/111827/ffffff&text=Product";
@@ -23,6 +23,7 @@ export default function ProductsAdminPage() {
   const router = useRouter();
   const [products, setProducts] = useState<Products[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [actionMessage, setActionMessage] = useState("");
 
   useEffect(() => {
     getProducts().then((data) => {
@@ -30,6 +31,24 @@ export default function ProductsAdminPage() {
       setIsLoading(false);
     });
   }, []);
+
+  const handleDelete = async (product: Products) => {
+    if (!product.id) return;
+
+    const shouldDelete = window.confirm(`Delete ${product.name}?`);
+    if (!shouldDelete) return;
+
+    setActionMessage("");
+    const result = await deleteProduct(product.id);
+
+    if (!result.success) {
+      setActionMessage(result.message);
+      return;
+    }
+
+    setProducts((current) => current.filter((item) => item.id !== product.id));
+    setActionMessage("Product deleted.");
+  };
 
   return (
 
@@ -66,6 +85,12 @@ export default function ProductsAdminPage() {
             Add Product
           </button>
         </div>
+
+        {actionMessage && (
+          <p className="mb-4 rounded-md border border-[#333] bg-[#111] px-4 py-3 text-sm text-gray-300">
+            {actionMessage}
+          </p>
+        )}
 
         {/* Desktop Table */}
         <div className="hidden lg:block bg-[#111111] border border-[#222] rounded-md overflow-hidden">
@@ -119,6 +144,7 @@ export default function ProductsAdminPage() {
                         alt={product.name}
                         width={56}
                         height={56}
+                        unoptimized
                         className="w-14 h-14 rounded-md object-cover"
                       />
 
@@ -153,15 +179,27 @@ export default function ProductsAdminPage() {
                   <td className="px-6 py-4">
                     <div className="flex justify-center gap-3">
 
-                      <button className="w-10 h-10 rounded-md bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition">
+                      <button
+                        onClick={() => router.push(`/Store/viewproduct?id=${product.id}`)}
+                        className="w-10 h-10 rounded-md bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition"
+                        aria-label={`View ${product.name}`}
+                      >
                         <FaEye />
                       </button>
 
-                      <button className="w-10 h-10 rounded-md bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 transition">
+                      <button
+                        onClick={() => router.push(`/admin/product/edit/${product.id}`)}
+                        className="w-10 h-10 rounded-md bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 transition"
+                        aria-label={`Edit ${product.name}`}
+                      >
                         <FaEdit />
                       </button>
 
-                      <button className="w-10 h-10 rounded-md bg-red-500/20 text-red-400 hover:bg-red-500/30 transition">
+                      <button
+                        onClick={() => handleDelete(product)}
+                        className="w-10 h-10 rounded-md bg-red-500/20 text-red-400 hover:bg-red-500/30 transition"
+                        aria-label={`Delete ${product.name}`}
+                      >
                         <FaTrash />
                       </button>
 
@@ -205,6 +243,7 @@ export default function ProductsAdminPage() {
                   alt={product.name}
                   width={96}
                   height={96}
+                  unoptimized
                   className="w-24 h-24 rounded-md object-cover"
                 />
 
@@ -250,6 +289,7 @@ export default function ProductsAdminPage() {
                     justify-center
                     gap-2
                   "
+                  onClick={() => router.push(`/Store/viewproduct?id=${product.id}`)}
                 >
                   <FaEye />
                   View
@@ -266,7 +306,7 @@ export default function ProductsAdminPage() {
                     justify-center
                     gap-2
                   "
-                  onClick={() => router.push("/admin/product/editIt")}
+                  onClick={() => router.push(`/admin/product/edit/${product.id}`)}
                 >
                   <FaEdit />
                   Edit
@@ -283,6 +323,7 @@ export default function ProductsAdminPage() {
                     justify-center
                     gap-2
                   "
+                  onClick={() => handleDelete(product)}
                 >
                   <FaTrash />
                   Delete

@@ -8,94 +8,97 @@ export default function BroadcastPage() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState("");
 
   const handleSend = async () => {
-    if (!subject || !message) {
-      alert("Please fill subject and message");
+    if (!subject.trim() || !message.trim()) {
+      setNotice("Please fill subject and message.");
       return;
     }
 
     try {
       setLoading(true);
-
+      setNotice("");
       await sendEmails(subject, message);
-
-      alert("Broadcast sent successfully 🚀");
-
+      setNotice("Broadcast sent successfully.");
       setSubject("");
       setMessage("");
     } catch (error) {
       console.error(error);
-      alert("Failed to send broadcast");
+      setNotice("Failed to send broadcast.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Broadcast Messages</h1>
-        <p className="text-gray-500">
-          Send updates to all your customers instantly
-        </p>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Compose */}
-        <div className="border rounded-xl p-5 bg-white dark:bg-zinc-900 space-y-4">
-          <h2 className="font-semibold">Compose Message</h2>
-
-          <input
-            type="text"
-            placeholder="Subject"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            className="w-full p-3 border rounded-lg bg-transparent"
-          />
-
-          <textarea
-            placeholder="Write your message in HTML ..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className="w-full p-3 border rounded-lg h-40 bg-transparent"
-          />
-
-          <button
-            onClick={handleSend}
-            disabled={loading}
-            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-          >
-            <Send size={18} />
-            {loading ? "Sending..." : "Send Broadcast"}
-          </button>
+    <section className="min-h-screen bg-black p-4 sm:p-6 lg:p-8">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white sm:text-4xl">
+            Broadcast Messages
+          </h1>
+          <p className="mt-2 text-gray-400">
+            Send store updates to your customer list.
+          </p>
         </div>
 
-        {/* Preview */}
-        <div className="border rounded-xl p-5 bg-white dark:bg-zinc-900">
-          <h2 className="font-semibold mb-3">Live Preview</h2>
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="space-y-4 rounded-md border border-[#222] bg-[#111] p-5">
+            <h2 className="font-semibold text-white">Compose Message</h2>
 
-          <div className="space-y-3">
-            <div>
-              <p className="text-sm text-gray-500">Subject:</p>
-              <p className="font-medium">
-                {subject || "Your subject will appear here"}
+            <input
+              type="text"
+              placeholder="Subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              className="w-full rounded-md border border-[#333] bg-black p-3 text-white outline-none focus:border-white"
+            />
+
+            <textarea
+              placeholder="Write your message..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="h-44 w-full resize-none rounded-md border border-[#333] bg-black p-3 text-white outline-none focus:border-white"
+            />
+
+            {notice && (
+              <p className="rounded-md border border-[#333] bg-black px-3 py-2 text-sm text-gray-300">
+                {notice}
               </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Message:</p>
+            )}
 
-              <div
-                className="border rounded-lg p-4 bg-white dark:bg-zinc-800 max-h-[400px] overflow-y-auto"
-                dangerouslySetInnerHTML={{
-                  __html: message || "<p class='text-gray-400'>Your message preview will appear here</p>",
-                }}
-              />
+            <button
+              onClick={handleSend}
+              disabled={loading}
+              className="inline-flex items-center gap-2 rounded-md bg-white px-5 py-3 font-semibold text-black transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Send size={18} />
+              {loading ? "Sending..." : "Send Broadcast"}
+            </button>
+          </div>
+
+          <div className="rounded-md border border-[#222] bg-[#111] p-5">
+            <h2 className="mb-4 font-semibold text-white">Live Preview</h2>
+
+            <div className="space-y-4 rounded-md border border-[#222] bg-black p-4">
+              <div>
+                <p className="text-sm text-gray-500">Subject</p>
+                <p className="font-medium text-white">
+                  {subject || "Your subject will appear here"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">Message</p>
+                <p className="max-h-[320px] overflow-y-auto whitespace-pre-line text-gray-300">
+                  {message || "Your message preview will appear here."}
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
